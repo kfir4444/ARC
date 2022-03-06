@@ -28,6 +28,7 @@ from arc.species.conformers import determine_chirality
 from arc.species.converter import compare_confs, sort_xyz_using_indices, translate_xyz, xyz_from_data, xyz_to_str
 from arc.species.vectors import calculate_angle, calculate_dihedral_angle, calculate_distance, get_delta_angle
 
+from numpy import unique
 
 if TYPE_CHECKING:
     from rmgpy.data.kinetics.family import TemplateReaction
@@ -62,8 +63,11 @@ def map_reaction(rxn: 'ARCReaction',
     if rxn.family is None:
         return map_general_rxn(rxn, backend=backend)
 
-    fam_func_dict = {'Disproportionation': map_h_abstraction,  # Mapping a disprop reaction is similar to H_Abs.
-                     'H_Abstraction': map_h_abstraction,
+    fam_func_dict = {'Disproportionation': map_abstractions,  # Mapping a disprop reaction is similar to H_Abs.
+                     'H_Abstraction': map_abstractions,
+                     'Br_Abstraction': map_abstractions,
+                     'Cl_Abstraction': map_abstractions,
+                     'F_Abstraction': map_abstractions,
                      'HO2_Elimination_from_PeroxyRadical': map_ho2_elimination_from_peroxy_radical,
                      'intra_H_migration': map_intra_h_migration,
                      }
@@ -216,15 +220,15 @@ def map_isomerization_reaction(rxn: 'ARCReaction',
 # Family-specific mapping functions:
 
 
-def map_h_abstraction(rxn: 'ARCReaction',
+def map_abstractions(rxn: 'ARCReaction',
                       backend: str = 'ARC',
                       db: Optional['RMGDatabase'] = None,
                       ) -> Optional[List[int]]:
     """
-    Map a hydrogen abstraction or a disproportionation reaction (they are principally similar for mapping).
+    Map an abstraction or a disproportionation reaction (they are principally similar for mapping).
 
     Strategy:
-        H_Abstraction: Map species R(*1)-H(*2) to species R(*1)j and map species R(*3)j to species R(*3)-H(*2).
+        Abstraction: Map species R(*1)-H(*2) to species R(*1)j and map species R(*3)j to species R(*3)-H(*2).
         Disprop: Map species R(*1)j to species R(*1)-H(*4) and map species R(*3)j-R(*2)-H(*4) to species R(*3)=R(*2).
         Use scissors to map the backbone.
 
@@ -239,11 +243,19 @@ def map_h_abstraction(rxn: 'ARCReaction',
             corresponding entry values are running atom indices of the products.
     """
     disprop = False
-    if not check_family_for_mapping_function(rxn=rxn, db=db, family='H_Abstraction'):
-        if check_family_for_mapping_function(rxn=rxn, db=db, family='Disproportionation'):
-            disprop = True
-        else:
-            return None
+    families = ['_Abstraction']*4
+    for index, atom in enumerate(['H','Br','Cl','F']):
+        families[index] = atom+families[index]
+    if check_family_for_mapping_function(rxn=rxn, db=db, family='Disproportionation'):
+        disprop = True
+    abstraction = False
+    for family in families:
+        if check_family_for_mapping_function(rxn=rxn, db=db, family=family):
+            abstraction = True
+            break
+    if not abstraction:
+        print("is not abs")
+        return None
 
     atom_labels = ('*1', '*2', '*3') if not disprop else ('*2', '*4', '*1')  # (H, H-anchor, attacking rad)
 
@@ -258,7 +270,7 @@ def map_h_abstraction(rxn: 'ARCReaction',
     r3_h2 = 0 if p_h_index < len_p1 else 1  # Identify R(*3)-H(*2), it's either product 0 or product 1.
     r1 = 1 - r3_h2  # Identify R(*1) in the products.
 
-    spc_r1_h2 = ARCSpecies(label='R1-H2',
+    spc_r1_h2 = ARCSpecies(label='R1-X2',
                            mol=rxn.r_species[r1_h2].mol.copy(deep=True),
                            xyz=rxn.r_species[r1_h2].get_xyz(),
                            bdes=[(r_label_dict[atom_labels[0]] + 1 - r1_h2 * len_r1,
@@ -270,8 +282,8 @@ def map_h_abstraction(rxn: 'ARCReaction',
     except SpeciesError:
         return None
     spc_r1_h2_cut = [spc for spc in spc_r1_h2_cuts if spc.label != 'H'][0] \
-        if any(spc.label != 'H' for spc in spc_r1_h2_cuts) else spc_r1_h2_cuts[0]  # Treat H2 as well :)
-    spc_r3_h2 = ARCSpecies(label='R3-H2',
+        if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r1_h2_cuts) else spc_r1_h2_cuts[0]  # Treat H2 as well :)
+    spc_r3_h2 = ARCSpecies(label='R3-X2',
                            mol=rxn.p_species[r3_h2].mol.copy(deep=True),
                            xyz=rxn.p_species[r3_h2].get_xyz(),
                            bdes=[(p_label_dict[atom_labels[2]] + 1 - r3_h2 * len_p1,
@@ -281,9 +293,11 @@ def map_h_abstraction(rxn: 'ARCReaction',
     try:
         spc_r3_h2_cuts = spc_r3_h2.scissors()
     except SpeciesError:
+        print("spc error in r3_h2")
+        print(spc_r3_h2.bdes)
         return None
     spc_r3_h2_cut = [spc for spc in spc_r3_h2_cuts if spc.label != 'H'][0] \
-        if any(spc.label != 'H' for spc in spc_r3_h2_cuts) else spc_r3_h2_cuts[0]  # Treat H2 as well :)
+        if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r3_h2_cuts) else spc_r3_h2_cuts[0]  # Treat H2 as well :)
     map_1 = map_two_species(spc_r1_h2_cut, rxn.p_species[r1], backend=backend)
     map_2 = map_two_species(rxn.r_species[r3], spc_r3_h2_cut, backend=backend)
 
@@ -471,7 +485,7 @@ def check_family_for_mapping_function(rxn: 'ARCReaction',
         bool: Whether the reaction family and the desired ``family`` are consistent.
     """
     if rxn.family is None:
-        rmgdb.determine_family(reaction=rxn, db=db)
+        rxn.determine_family(db)
     if rxn.family is None or rxn.family.label != family:
         return False
     return True
@@ -1350,6 +1364,38 @@ def map_hydrogens(spc_1: ARCSpecies,
                     atom_map[atoms_1.index(hydrogen_1)] = hydrogen_indices_2[deviations.index(min(deviations))]
     return atom_map
 
+
+
+def check_atom_map(rxn) -> bool:
+    """
+    A helper function for testing a reaction atom map.
+    Tests that element symbols are ordered correctly.
+    Tests that the elements in the atom map are unique, so that the function is one to one.
+    Note: These are necessary but not a sufficient conditions.
+    Args:
+        rxn (ARCReaction): The reaction to examine.
+    Returns: bool
+        Whether the atom mapping makes sense.
+        insert np.unique
+    """
+    if len(rxn.atom_map) != sum([spc.number_of_atoms for spc in rxn.r_species]):
+        return False
+    r_elements, p_elements = list(), list()
+    for r_species in rxn.r_species:
+        r_elements.extend(list(r_species.get_xyz()['symbols']))
+    for p_species in rxn.p_species:
+        p_elements.extend(list(p_species.get_xyz()['symbols']))
+    for i, map_i in enumerate(rxn.atom_map):
+        if r_elements[i] != p_elements[map_i]:
+            break
+    for i in range(len(unique(rxn.atom_map))):
+        if unique(rxn.atom_map)[i]!= i:
+            return False
+
+    else:
+        # Did not break, the mapping makes sense.
+        return True
+    return False
 
 def add_adjacent_hydrogen_atoms_to_map_based_on_a_specific_torsion(spc_1: ARCSpecies,
                                                                    spc_2: ARCSpecies,
