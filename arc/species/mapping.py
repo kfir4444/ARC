@@ -220,6 +220,28 @@ def map_isomerization_reaction(rxn: 'ARCReaction',
 # Family-specific mapping functions:
 
 
+def classify_reaction_for_abs(rxn: 'ARCReaction',
+                      db: 'RMGDatabase')-> tuple(bool,bool):
+    """A halper function for map_abstractions that helps classify the problem"""
+    disprop = False
+    abstraction = False
+    families = ['_Abstraction']*4
+    for index, atom in enumerate(['H','Br','Cl','F']):
+        families[index] = atom+families[index]
+    families += ['SubstitutionS', 'Substitution_O']
+
+    if check_family_for_mapping_function(rxn=rxn, db=db, family='Disproportionation'):
+        disprop = True
+        abstraction = False
+        return abstraction,disprop
+    abstraction = False
+    for family in families:
+        if check_family_for_mapping_function(rxn=rxn, db=db, family=family):
+            abstraction = True
+            return abstraction,disprop
+    if not abstraction:
+        return abstraction,disprop
+
 def map_abstractions(rxn: 'ARCReaction',
                       backend: str = 'ARC',
                       db: Optional['RMGDatabase'] = None,
@@ -242,19 +264,8 @@ def map_abstractions(rxn: 'ARCReaction',
             Entry indices are running atom indices of the reactants,
             corresponding entry values are running atom indices of the products.
     """
-    disprop = False
-    families = ['_Abstraction']*4
-    for index, atom in enumerate(['H','Br','Cl','F']):
-        families[index] = atom+families[index]
-    if check_family_for_mapping_function(rxn=rxn, db=db, family='Disproportionation'):
-        disprop = True
-    abstraction = False
-    for family in families:
-        if check_family_for_mapping_function(rxn=rxn, db=db, family=family):
-            abstraction = True
-            break
-    if not abstraction:
-        print("is not abs")
+    abstraction,disprop = classify_reaction_for_abs(rxn=rxn,db=db)
+    if abstraction == disprop and disprop == False:
         return None
 
     atom_labels = ('*1', '*2', '*3') if not disprop else ('*2', '*4', '*1')  # (H, H-anchor, attacking rad)
@@ -293,8 +304,6 @@ def map_abstractions(rxn: 'ARCReaction',
     try:
         spc_r3_h2_cuts = spc_r3_h2.scissors()
     except SpeciesError:
-        print("spc error in r3_h2")
-        print(spc_r3_h2.bdes)
         return None
     spc_r3_h2_cut = [spc for spc in spc_r3_h2_cuts if spc.label != 'H'][0] \
         if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r3_h2_cuts) else spc_r3_h2_cuts[0]  # Treat H2 as well :)
