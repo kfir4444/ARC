@@ -220,8 +220,8 @@ def map_isomerization_reaction(rxn: 'ARCReaction',
 # Family-specific mapping functions:
 
 
-def classify_reaction_for_abs(rxn: 'ARCReaction',
-                      db: 'RMGDatabase')-> tuple(bool,bool):
+def classify_reaction_for_abstractions(rxn: 'ARCReaction',
+                      db: 'RMGDatabase')-> tuple([bool,bool]):
     """A halper function for map_abstractions that helps classify the problem"""
     disprop = False
     abstraction = False
@@ -241,6 +241,7 @@ def classify_reaction_for_abs(rxn: 'ARCReaction',
             return abstraction,disprop
     if not abstraction:
         return abstraction,disprop
+
 
 def map_abstractions(rxn: 'ARCReaction',
                       backend: str = 'ARC',
@@ -264,7 +265,7 @@ def map_abstractions(rxn: 'ARCReaction',
             Entry indices are running atom indices of the reactants,
             corresponding entry values are running atom indices of the products.
     """
-    abstraction,disprop = classify_reaction_for_abs(rxn=rxn,db=db)
+    abstraction,disprop = classify_reaction_for_abstractions(rxn=rxn,db=db)
     if abstraction == disprop and disprop == False:
         return None
 
@@ -307,6 +308,75 @@ def map_abstractions(rxn: 'ARCReaction',
         return None
     spc_r3_h2_cut = [spc for spc in spc_r3_h2_cuts if spc.label != 'H'][0] \
         if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r3_h2_cuts) else spc_r3_h2_cuts[0]  # Treat H2 as well :)
+    map_1 = map_two_species(spc_r1_h2_cut, rxn.p_species[r1], backend=backend)
+    map_2 = map_two_species(rxn.r_species[r3], spc_r3_h2_cut, backend=backend)
+
+    result = {r_h_index: p_h_index}
+    for r_increment, p_increment, map_i, j in zip([r1_h2 * len_r1, r3 * len_r1],
+                                                  [r1 * len_p1, r3_h2 * len_p1],
+                                                  [map_1, map_2],
+                                                  [0, 1]):
+        for i, entry in enumerate(map_i):
+            r_index = i + r_increment + (1 - j) * int(i + r_increment >= r_h_index)
+            p_index = entry + p_increment + j * int(i + p_increment >= p_h_index)
+            result[r_index] = p_index
+    return [val for key, val in sorted(result.items(), key=lambda item: item[0])]
+
+
+def classify_reaction_for_intra_substitutions(rxn: 'ARCReaction',
+                      db: 'RMGDatabase')-> bool:
+    if rxn.family.label in ["1,2_shiftC","1,2_shiftS","Cyclic_Ether_Formation",
+                            "Cyclic_Thioether_Formation","Intra_R_Add_ExoTetCyclic",
+                            "Intra_R_Add_Exo_scission","intra_H_migration",
+                            "intra_OH_migration", "intra_halogen_migration",
+                            "intra_substitutionCS_cyclization", "intra_substitutionCS_isomerization",
+                            "intra_substitutionS_cyclization", "intra_substitutionS_isomerization"]:
+        return True
+    else:
+        return False
+
+
+def map_intra_substitutions(rxn: 'ARCReaction',
+                      backend: str = 'ARC',
+                      db: Optional['RMGDatabase'] = None,
+                      ) -> Optional[List[int]]:
+
+    if not classify_reaction_for_intra_substitutions(rxn=rxn,db=db):
+        return None
+    atom_labels = ('*1', '*2', '*3')
+
+    rmg_reactions = get_rmg_reactions_from_arc_reaction(arc_reaction=rxn, backend=backend)
+    r_label_dict, p_label_dict = get_atom_indices_of_labeled_atoms_in_an_rmg_reaction(arc_reaction=rxn,
+                                                                                  rmg_reaction=rmg_reactions[0])
+
+    spc_r = ARCSpecies(label='R',
+                           mol=rxn.r_species[0].mol.copy(deep=True),
+                           xyz=rxn.r_species[0].get_xyz(),
+                           bdes=[(r_label_dict[atom_labels[1]] + 1,
+                                  r_label_dict[atom_labels[2]] + 1)])
+    spc_r.final_xyz = spc_r.get_xyz()  # Scissors requires the .final_xyz attribute to be populated.
+    try:
+        spc_r_cuts = spc_r.scissors()
+    except SpeciesError:
+        return None
+    spc_r_cut = [spc for spc in spc_r_cuts if spc.label != 'H'][0] \
+        if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r_cuts) else spc_r_cuts[
+        0]  # Treat H2 as well :)
+    spc_r3_h2 = ARCSpecies(label='R3-X2',
+                           mol=rxn.p_species[r3_h2].mol.copy(deep=True),
+                           xyz=rxn.p_species[r3_h2].get_xyz(),
+                           bdes=[(p_label_dict[atom_labels[2]] + 1 - r3_h2 * len_p1,
+                                  p_label_dict[atom_labels[1]] + 1 - r3_h2 * len_p1)],
+                           # Mark the R(*3)-H(*2) bond for scission.
+                           )
+    spc_r3_h2.final_xyz = spc_r3_h2.get_xyz()
+    try:
+        spc_r3_h2_cuts = spc_r3_h2.scissors()
+    except SpeciesError:
+        return None
+    spc_r3_h2_cut = [spc for spc in spc_r3_h2_cuts if spc.label != 'H'][0] \
+        if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r3_h2_cuts) else spc_r3_h2_cuts[
+        0]  # Treat H2 as well :)
     map_1 = map_two_species(spc_r1_h2_cut, rxn.p_species[r1], backend=backend)
     map_2 = map_two_species(rxn.r_species[r3], spc_r3_h2_cut, backend=backend)
 

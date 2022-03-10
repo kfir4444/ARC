@@ -680,9 +680,9 @@ H      -1.67091600   -1.35164600   -0.93286400"""
         """Test the process_xyz() function"""
         # the last four H's in xyz hve a leading TAB character which is removed when processing
         xyz = """
-        
-        
-        
+
+
+
         O   3.1024  0.1216  1.0455
    O    1.4602   -3.3145   -0.2099
 C   -2.2924    0.2555   -0.8205
@@ -695,7 +695,7 @@ C   -2.2924    0.2555   -0.8205
        C   -0.1097   -0.9444   -0.2920
    C   -0.2294    1.3920    0.1279
    C    1.0837    1.3976    0.5896
-   
+
 
    C,    1.9403,   -2.2644,    0.1662
     H   -2.6363    1.2898   -0.7367
@@ -712,12 +712,12 @@ H    3.8200    2.0502    0.7167
 H,-0.7777,2.3260,0.1202
 	H    1.5203    2.3247    0.9261
 	H    2.9757   -2.2266    0.5368
- 
-     
-   
-   
- 
- 
+
+
+
+
+
+
  """
         expected_xyz2 = """O    3.1024    0.1216    1.0455
 O    1.4602   -3.3145   -0.2099
@@ -1309,6 +1309,16 @@ H       1.11582953    0.94384729   -0.10134685"""
                                                                       charge=spc.charge)[1]))
         self.assertTrue(any(spc.mol.to_smiles() == 'CO[NH]' for spc in spc_list))
 
+        p_1_xyz = {'symbols': ('O', 'Cl'), 'isotopes': (16, 35),
+                   'coords': ((0.8407400963991551, 0.0, 0.0), (-0.8407400963991551, 0.0, 0.0))}
+        spc1 = ARCSpecies(label="R3-X2", smiles="[O]Cl",bdes=[(1, 2)])
+        spc1.final_xyz = spc1.get_xyz()
+        spc0,spc2 = spc1.scissors()
+        # self.assertEqual(spc0.multiplicity,3)
+        # self.assertEqual(spc1.multiplicity, 2)
+
+
+
     def test_net_charged_species(self):
         """Test that we can define, process, and manipulate ions"""
         nh4 = ARCSpecies(label='NH4', smiles='[NH4+]', charge=1)
@@ -1744,14 +1754,14 @@ class TestTSGuess(unittest.TestCase):
         H  -1.6986   -0.8169    0.6255"""
         reactant = ARCSpecies(label='reactant', smiles='C([C]1=[N]O[N]=[N]1)', xyz=r_xyz)
 
-        p_xyz = """C  -1.0108   -0.0114   -0.0610  
-        C  0.4780    0.0191    0.0139    
-        N  1.2974   -0.9930    0.4693    
-        O  0.6928   -1.9845    0.8337    
-        N  1.7456    1.9701   -0.6976    
-        N  1.1642    1.0763   -0.3716    
-        H  -1.4020    0.9134   -0.4821  
-        H  -1.3327   -0.8499   -0.6803   
+        p_xyz = """C  -1.0108   -0.0114   -0.0610
+        C  0.4780    0.0191    0.0139
+        N  1.2974   -0.9930    0.4693
+        O  0.6928   -1.9845    0.8337
+        N  1.7456    1.9701   -0.6976
+        N  1.1642    1.0763   -0.3716
+        H  -1.4020    0.9134   -0.4821
+        H  -1.3327   -0.8499   -0.6803
         H  -1.4329   -0.1554    0.9349"""
         product = ARCSpecies(label='product', smiles='[N-]=[N+]=C(N=O)C', xyz=p_xyz)
 
