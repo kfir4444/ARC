@@ -340,15 +340,16 @@ def map_intra_substitutions(rxn: 'ARCReaction',
                       backend: str = 'ARC',
                       db: Optional['RMGDatabase'] = None,
                       ) -> Optional[List[int]]:
-
     if not classify_reaction_for_intra_substitutions(rxn=rxn,db=db):
+        print("not the correct reaction")
         return None
     atom_labels = ('*1', '*2', '*3')
 
     rmg_reactions = get_rmg_reactions_from_arc_reaction(arc_reaction=rxn, backend=backend)
     r_label_dict, p_label_dict = get_atom_indices_of_labeled_atoms_in_an_rmg_reaction(arc_reaction=rxn,
                                                                                   rmg_reaction=rmg_reactions[0])
-
+    r_h_index = r_label_dict[atom_labels[1]]
+    p_h_index = p_label_dict[atom_labels[1]]
     spc_r = ARCSpecies(label='R',
                            mol=rxn.r_species[0].mol.copy(deep=True),
                            xyz=rxn.r_species[0].get_xyz(),
@@ -358,31 +359,36 @@ def map_intra_substitutions(rxn: 'ARCReaction',
     try:
         spc_r_cuts = spc_r.scissors()
     except SpeciesError:
+        print(f"error in {spc_r}scissors")
         return None
     spc_r_cut = [spc for spc in spc_r_cuts if spc.label != 'H'][0] \
         if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r_cuts) else spc_r_cuts[
         0]  # Treat H2 as well :)
-    spc_r3_h2 = ARCSpecies(label='R3-X2',
-                           mol=rxn.p_species[r3_h2].mol.copy(deep=True),
-                           xyz=rxn.p_species[r3_h2].get_xyz(),
-                           bdes=[(p_label_dict[atom_labels[2]] + 1 - r3_h2 * len_p1,
-                                  p_label_dict[atom_labels[1]] + 1 - r3_h2 * len_p1)],
-                           # Mark the R(*3)-H(*2) bond for scission.
+    spc_p = ARCSpecies(label='P',
+                           mol=rxn.p_species[0].mol.copy(deep=True),
+                           xyz=rxn.p_species[0].get_xyz(),
+                           bdes=[(p_label_dict[atom_labels[0]] + 1,
+                                  p_label_dict[atom_labels[2]] + 1)],
+                           # Mark the bond for scission.
                            )
-    spc_r3_h2.final_xyz = spc_r3_h2.get_xyz()
+    spc_p.final_xyz = spc_p.get_xyz()
     try:
-        spc_r3_h2_cuts = spc_r3_h2.scissors()
+        spc_p_cuts = spc_p.scissors()
     except SpeciesError:
+        print(f"error in {spc_p} scissors")
+        print(spc_p.bdes)
         return None
-    spc_r3_h2_cut = [spc for spc in spc_r3_h2_cuts if spc.label != 'H'][0] \
-        if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_r3_h2_cuts) else spc_r3_h2_cuts[
+    spc_p_cut = [spc for spc in spc_p_cuts if spc.label != 'H'][0] \
+        if any(spc.label not in ['H', 'Cl', 'Br', 'F'] for spc in spc_p_cuts) else spc_p_cuts[
         0]  # Treat H2 as well :)
-    map_1 = map_two_species(spc_r1_h2_cut, rxn.p_species[r1], backend=backend)
-    map_2 = map_two_species(rxn.r_species[r3], spc_r3_h2_cut, backend=backend)
+    spc_p_cutted = spc_p_cuts[0 if spc_p_cuts.index(spc_p_cut) == 1 else 1]
+    spc_r_cutted = spc_r_cuts[0 if spc_r_cuts.index(spc_r_cut) == 1 else 1]
+    map_1 = map_two_species(spc_r_cut, spc_p_cut, backend=backend)
+    map_2 = map_two_species(spc_p_cutted, spc_r_cutted, backend=backend)
 
     result = {r_h_index: p_h_index}
-    for r_increment, p_increment, map_i, j in zip([r1_h2 * len_r1, r3 * len_r1],
-                                                  [r1 * len_p1, r3_h2 * len_p1],
+    for r_increment, p_increment, map_i, j in zip([0, 1],
+                                                  [0, 1],
                                                   [map_1, map_2],
                                                   [0, 1]):
         for i, entry in enumerate(map_i):
