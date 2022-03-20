@@ -20,7 +20,7 @@ from rmgpy.molecule import Molecule
 from rmgpy.species import Species
 
 import arc.rmgdb as rmgdb
-from arc.common import convert_list_index_0_to_1, extremum_list, logger
+from arc.common import convert_list_index_0_to_1, extremum_list, logger,key_by_val
 from arc.exceptions import SpeciesError
 from arc.species.mapping import get_rmg_reactions_from_arc_reaction, \
     get_atom_indices_of_labeled_atoms_in_an_rmg_reaction
@@ -99,6 +99,7 @@ def map_rxn(rxn: 'ARCReaction',
                                                                                       rmg_reaction=rmg_reactions[0])
 
     # step 3:
+    assign_labels_to_products(rxn,r_label_dict)
     reactants, products,loc_r,loc_p = prepare_reactants_and_products_for_scissors(rxn, r_label_dict, p_label_dict)
 
     r_cuts, p_cuts = cut_species_for_mapping(rxn,reactants, products,loc_r,loc_p)
@@ -123,7 +124,7 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
         p_label_dict: the labels of the products
 
     Returns:
-            The species in the reactants and products where a bond was broken or formed and the location and number of cutss.
+            The species in the reactants and products where a bond was broken or formed.
     """
 
     breaks = []
@@ -134,9 +135,8 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
             breaks.append(action)
         elif action[0].lower() == "FORM_BOND".lower():
             forms.append(action)
-
-    reactants, products,loc_r,loc_p = list(), list(),[0]*len(rxn.r_species), [0]*len(rxn.p_species)
-
+    reactants, products, loc_r, loc_p = [0] * len(rxn.r_species), [0] * len(rxn.p_species), [0] * len(rxn.r_species), [
+        0] * len(rxn.p_species)
     for broken_bond in breaks:
         location = 0
         index = 0
@@ -145,12 +145,17 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
                 location += 1
                 index += reactant.number_of_atoms
             else:
-                loc_r[location]+=1
-                reactants.append(ARCSpecies(label=str(index) + "_reactants",
-                                            mol=reactant.mol.copy(deep=True),
-                                            xyz=reactant.get_xyz(),
-                                            bdes=[(r_label_dict[broken_bond[1]],
-                                                   r_label_dict[broken_bond[3]])]))
+                loc_r[location] += 1
+                reactants[location] = ARCSpecies(label="".join(sorted(
+                    [key_by_val(r_label_dict, r_label_dict[broken_bond[1]]),
+                     key_by_val(p_label_dict, p_label_dict[broken_bond[3]])])),
+                mol = reactant.mol.copy(deep=True),
+                xyz = reactant.get_xyz(),
+                bdes = [(r_label_dict[broken_bond[1]] + 1 - index,
+                         r_label_dict[broken_bond[3]] + 1 - index)])
+
+                for mol1, mol2 in zip(reactants[location].mol.atoms, reactant.mol.atoms):
+                    mol1.label = mol2.label
                 break
 
     for formed_bond in forms:
@@ -162,21 +167,53 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
                 index += product.number_of_atoms
             else:
                 loc_p[location] += 1
-                products.append(ARCSpecies(label=str(index) + "_products",
-                                           mol=product.mol.copy(deep=True),
-                                           xyz=product.get_xyz(),
-                                           bdes=[(p_label_dict[formed_bond[1]],
-                                                  p_label_dict[formed_bond[3]])]))
+                products[location] = ARCSpecies(label="".join(sorted(
+                    [key_by_val(p_label_dict, p_label_dict[formed_bond[1]]),
+                     key_by_val(p_label_dict, p_label_dict[formed_bond[3]])])),
+                mol = product.mol.copy(deep=True),
+                xyz = product.get_xyz(),
+                bdes = [(p_label_dict[formed_bond[1]] + 1 - index,
+                         p_label_dict[formed_bond[3]] + 1 - index)])
+                for mol1, mol2 in zip(products[location].mol.atoms, product.mol.atoms):
+                    mol1.label = mol2.label
                 break
+    for index, value in enumerate(loc_r):
+        if value == 0:
+            reactants[index] = rxn.r_species[index]
 
-    return reactants, products,loc_r,loc_p
+    for index, value in enumerate(loc_p):
+        if value == 0:
+            products[index] = rxn.p_species[index]
+
+    return reactants, products, loc_r, loc_p
+# Add BDE instead of adding species.
+
+
+def assign_labels_to_products(rxn: 'ARCReaction',
+                              p_label_dict: dict):
+    """
+    Add the indices to the reactants and products.
+    Args:
+        rxn: ARCReaction object to be mapped
+        p_label_dict: the labels of the products
+
+    Returns:
+        Adding labels to the atoms of the reactants and products, to be identified later.
+    """
+
+    atom_index = 0
+    for product in rxn.p_species:
+        for atom in product.mol.atoms:
+            if atom_index in p_label_dict.values() and (atom.label==str() or atom.label==None):
+                atom.label = key_by_val(atom_index,p_label_dict)
+            atom_index+=1
 
 
 def cut_species_for_mapping(reactants: List[ARCSpecies],
                             products: List[ARCSpecies],
                             loc_r: List[int],
                             loc_p: List[int],
-                            ) -> Optional[Tuple[List[ARCSpecies], List[ARCSpecies]]]
+                            ) -> Optional[Tuple[List[ARCSpecies], List[ARCSpecies]]]:
     """
     A function for scissoring the reactants and products, as a preparation for atom mapping.
     Args:
