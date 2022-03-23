@@ -38,26 +38,6 @@ if TYPE_CHECKING:
 RESERVED_FINGERPRINT_KEYS = ['self', 'chirality', 'label']
 
 
-def set_up_for_map_reaction(rxn: 'ARCReaction',
-                            backend: str = 'ARC',
-                            db: Optional['RMGDatabase'] = None,
-                            ) -> Optional[List[int]]:
-    """
-    Classify reaction using reaction family rules, sends them to correct mapping functions.
-
-    Args:
-        rxn (ARCReaction): An ARCReaction object instance.
-        backend (str, optional): Whether to use ``'QCElemental'`` or ``ARC``'s method as the backend.
-        db (RMGDatabase, optional): The RMG database instance.
-
-    Returns:
-        Optional[List[int]]:
-            Entry indices are running atom indices of the reactants,
-            corresponding entry values are running atom indices of the products.
-    """
-
-    pass
-
 
 def map_rxn(rxn: 'ARCReaction',
             backend: str = 'ARC',
@@ -287,6 +267,7 @@ def pairing_reactants_and_products_for_mapping(r_cuts: List[ARCSpecies],
         for product_cut in p_cuts:
             if r_cut_p_cuts_share_adjlist(reactant_cut,product_cut):
                 pairs.append((r_cuts,product_cut))
+                p_cuts.remove(product_cut) #Just in case there are two of the same species in the list, matching them by order.
                 break
     return pairs
             
