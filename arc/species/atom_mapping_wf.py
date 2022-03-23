@@ -126,18 +126,22 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
                 location += 1
                 index += reactant.number_of_atoms
             else:
-                loc_r[location] += 1
-                reactants[location] = ARCSpecies(label="".join(sorted(
-                    [key_by_val(r_label_dict, r_label_dict[broken_bond[1]]),
-                     key_by_val(p_label_dict, p_label_dict[broken_bond[3]])])),
-                mol = reactant.mol.copy(deep=True),
-                xyz = reactant.get_xyz(),
-                bdes = [(r_label_dict[broken_bond[1]] + 1 - index,
-                         r_label_dict[broken_bond[3]] + 1 - index)])
+                if loc_r[location] > 0:
+                    loc_r[location] += 1
+                    reactants[location].bdes += [(r_label_dict[broken_bond[1]] + 1 - index, r_label_dict[broken_bond[3]] + 1 - index)]
+                else:
+                    loc_r[location] += 1
+                    reactants[location] = ARCSpecies(label="".join(sorted(
+                        [key_by_val(r_label_dict, r_label_dict[broken_bond[1]]),
+                        key_by_val(p_label_dict, p_label_dict[broken_bond[3]])])),
+                    mol = reactant.mol.copy(deep=True),
+                    xyz = reactant.get_xyz(),
+                    bdes = [(r_label_dict[broken_bond[1]] + 1 - index,
+                            r_label_dict[broken_bond[3]] + 1 - index)])
 
-                for mol1, mol2 in zip(reactants[location].mol.atoms, reactant.mol.atoms):
-                    mol1.label = mol2.label
-                break
+                    for mol1, mol2 in zip(reactants[location].mol.atoms, reactant.mol.atoms):
+                        mol1.label = mol2.label
+                    break
 
     for formed_bond in forms:
         location = 0
@@ -147,17 +151,21 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
                 location += 1
                 index += product.number_of_atoms
             else:
-                loc_p[location] += 1
-                products[location] = ARCSpecies(label="".join(sorted(
-                    [key_by_val(p_label_dict, p_label_dict[formed_bond[1]]),
-                     key_by_val(p_label_dict, p_label_dict[formed_bond[3]])])),
-                mol = product.mol.copy(deep=True),
-                xyz = product.get_xyz(),
-                bdes = [(p_label_dict[formed_bond[1]] + 1 - index,
-                         p_label_dict[formed_bond[3]] + 1 - index)])
-                for mol1, mol2 in zip(products[location].mol.atoms, product.mol.atoms):
-                    mol1.label = mol2.label
-                break
+                if loc_p[location] > 0:
+                    loc_p[location]+=1
+                    products[location].bdes += [(p_label_dict[formed_bond[1]] + 1 - index, p_label_dict[formed_bond[3]] + 1 - index)]
+                else:
+                    loc_p[location] += 1
+                    products[location] = ARCSpecies(label="".join(sorted(
+                        [key_by_val(p_label_dict, p_label_dict[formed_bond[1]]),
+                        key_by_val(p_label_dict, p_label_dict[formed_bond[3]])])),
+                    mol = product.mol.copy(deep=True),
+                    xyz = product.get_xyz(),
+                    bdes = [(p_label_dict[formed_bond[1]] + 1 - index,
+                            p_label_dict[formed_bond[3]] + 1 - index)])
+                    for mol1, mol2 in zip(products[location].mol.atoms, product.mol.atoms):
+                        mol1.label = mol2.label
+                    break
     for index, value in enumerate(loc_r):
         if value == 0:
             reactants[index] = rxn.r_species[index]
