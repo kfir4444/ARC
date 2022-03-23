@@ -273,7 +273,7 @@ def pairing_reactants_and_products_for_mapping(r_cuts: List[ARCSpecies],
     for reactant_cut in r_cuts:
         for product_cut in p_cuts:
             if r_cut_p_cuts_share_adjlist(reactant_cut,product_cut):
-                pairs.append((r_cuts,product_cut))
+                pairs.append((reactant_cut,product_cut))
                 p_cuts.remove(product_cut) #Just in case there are two of the same species in the list, matching them by order.
                 break
     return pairs
