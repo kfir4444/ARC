@@ -75,7 +75,7 @@ def map_rxn(rxn: 'ARCReaction',
     reactants, products,loc_r,loc_p = prepare_reactants_and_products_for_scissors(rxn, r_label_dict, p_label_dict)
 
     #step 3:
-    r_cuts, p_cuts = cut_species_for_mapping(rxn,reactants, products,loc_r,loc_p)
+    r_cuts, p_cuts = cut_species_for_mapping(reactants, products,loc_r,loc_p)
 
     #step 4:
     pairs_of_reactant_and_products = pairing_reactants_and_products_for_mapping(r_cuts, p_cuts)
@@ -254,7 +254,7 @@ def r_cut_p_cuts_share_adjlist(reactant, product):
     rmg_1,rmg_2 = Species(),Species()
     rmg_1 = Species(label=reactant.label, molecule=[reactant.mol])
     rmg_2 = Species(label=product.label, molecule=[product.mol])
-    return rmg_1.isisomorphic(rmg_2)
+    return rmg_1.is_isomorphic(rmg_2)
 
 
 def pairing_reactants_and_products_for_mapping(r_cuts: List[ARCSpecies],
