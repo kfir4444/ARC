@@ -84,7 +84,6 @@ def map_rxn(rxn: 'ARCReaction',
     maps = []
     for pair in pairs_of_reactant_and_products:
         maps.append(map_two_species(pair[0],pair[1]))
-    pass
 
     #step 6:
     atom_map = join_map(rxn,maps)
