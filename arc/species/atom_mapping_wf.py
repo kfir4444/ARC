@@ -72,7 +72,7 @@ def map_rxn(rxn: 'ARCReaction',
 
     # step 2:
     assign_labels_to_products(rxn,p_label_dict)
-    reactants, products,loc_r,loc_p = prepare_reactants_and_products_for_scissors(rxn, r_label_dict, p_label_dict)
+    reactants, products,loc_r,loc_p,breaks = prepare_reactants_and_products_for_scissors(rxn, r_label_dict, p_label_dict)
 
     #step 3:
     r_cuts, p_cuts = cut_species_for_mapping(reactants, products,loc_r,loc_p)
@@ -125,7 +125,7 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
                 location += 1
                 index += reactant.number_of_atoms
             else:
-                if loc_r[location] > 0:
+                if loc_r[location] > 1:
                     loc_r[location] += 1
                     reactants[location].bdes += [(r_label_dict[broken_bond[1]] + 1 - index, r_label_dict[broken_bond[3]] + 1 - index)]
                 else:
@@ -150,7 +150,7 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
                 location += 1
                 index += product.number_of_atoms
             else:
-                if loc_p[location] > 0:
+                if loc_p[location] > 1:
                     loc_p[location]+=1
                     products[location].bdes += [(p_label_dict[formed_bond[1]] + 1 - index, p_label_dict[formed_bond[3]] + 1 - index)]
                 else:
@@ -173,7 +173,7 @@ def prepare_reactants_and_products_for_scissors(rxn: 'ARCReaction',
         if value == 0:
             products[index] = rxn.p_species[index]
 
-    return reactants, products, loc_r, loc_p
+    return reactants, products, loc_r, loc_p, breaks
 # Add BDE instead of adding species.
 
 
@@ -184,6 +184,7 @@ def assign_labels_to_products(rxn: 'ARCReaction',
     Args:
         rxn: ARCReaction object to be mapped
         p_label_dict: the labels of the products
+        Consider changing in rmgpy.
 
     Returns:
         Adding labels to the atoms of the reactants and products, to be identified later.
@@ -292,7 +293,7 @@ def join_map(rxn: 'ARCReaction',
         an Atom Map of the compleate reaction.
 
     """
-pass
+    pass
 
 # ROOH + ROOH <=> RO+ HOH +ROO
 # RO OH ROO H <=> RO OH ROO H
