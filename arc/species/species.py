@@ -1783,8 +1783,8 @@ class ARCSpecies(object):
             # easy
             if len(mol1.atoms) != len(top1):
                 xyz1, xyz2 = xyz2, xyz1
-        else:
-            # harder, but not by much
+        elif not mol1.is_isomorphic(mol2): #now we can assume that mol1 != mol2
+            # harder
             if not is_xyz_mol_match(mol1,xyz1):
                 xyz1,xyz2 = xyz2,xyz1
 
@@ -1814,9 +1814,7 @@ class ARCSpecies(object):
         return [spc1, spc2]
 
 
-def is_xyz_mol_match(mol: RMGMolecule
-                    ,xyz: Dict()
-                    )->Boolean:
+def is_xyz_mol_match(mol,xyz)->Boolean:
     """
     A helper function that matches rmgpy.molecule.molecule.Molecule object to an xyz, used in _scissors to match xyz and the cut products.
     
@@ -1825,14 +1823,35 @@ def is_xyz_mol_match(mol: RMGMolecule
             xyz: coordinates of the cut product
 
         Returns: list
-            True if the xyz and mol maatches, False if not
+            True if the xyz and mol matches, False if not
     Strategy:
-        Create an ARCSpecies from the xyz, extract the mol object from it, use is_isomorphic.
+        TBD
     """
-    spc=ARCSpecies(label="test",xyz=xyz)
-    if spc.mol.is_isomorphic(mol):
-        return True
-    return False
+
+    element_dict_mol,element_dict_xyz = dict(), dict()
+    for atom in mol.atoms:
+        if atom.element.symbol in element_dict_mol:
+            element_dict_mol[atom.element.symbol] += 1
+        else:
+            element_dict_mol[atom.element.symbol] = 1
+    
+
+    for atom in xyz['symbols']:
+        if atom in element_dict_xyz:
+            element_dict_xyz[atom] += 1
+        else:
+            element_dict_xyz[atom] = 1
+    
+    print(element_dict_mol,element_dict_xyz)
+    
+    for element,count in element_dict_mol.items():
+        if element not in element_dict_xyz or element_dict_xyz[element] != count:
+            return False
+    
+    # Up to here, we know that the mol and xyz shares composition but we do not know about the connectivity.
+    # The problem with connectivity is that we can't find radicals from the xyz alone.
+
+    return True
 
 
 class TSGuess(object):

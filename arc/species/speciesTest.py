@@ -1313,9 +1313,11 @@ H       1.11582953    0.94384729   -0.10134685"""
                    'coords': ((0.8407400963991551, 0.0, 0.0), (-0.8407400963991551, 0.0, 0.0))}
         spc1 = ARCSpecies(label="R3-X2", smiles="[O]Cl",bdes=[(1, 2)])
         spc1.final_xyz = spc1.get_xyz()
-        spc0,spc2 = spc1.scissors()
-        # self.assertEqual(spc0.multiplicity,3)
-        # self.assertEqual(spc1.multiplicity, 2)
+        spcs = spc1.scissors()
+        multiplicity= [mult.multiplicity for mult in spcs]
+        self.assertIn(2,multiplicity)
+        self.assertIn(3,multiplicity)
+        
 
 
 
