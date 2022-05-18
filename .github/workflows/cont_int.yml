@@ -31,10 +31,10 @@ jobs:
 
     - name: Install dependencies
       run: |
- 	mamba install -y cython
         export PYTHONPATH=$PYTHONPATH:$(pwd)
         conda activate arc_env
         cd ..
+        which cython
         git clone https://github.com/ReactionMechanismGenerator/RMG-Py
         cd RMG-Py
         export PYTHONPATH=$PYTHONPATH:$(pwd)
