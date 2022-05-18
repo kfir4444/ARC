@@ -23,7 +23,7 @@ jobs:
         environment-file: environment.yml
         activate-environment: arc_env
         extra-specs: |
-		python-version: 3.7
+          python=3.7
 
     - name: Install codecov
       run: micromamba install -y -c conda-forge codecov
