@@ -17,11 +17,14 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up micromamba Python 3.7
-      uses: mamba-org/provision-with-micromamba@main
+    - name: Setup Mambaforge Python 3.7
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        environment-file: environment.yml
-        environment-name: arc_env
+        miniforge-variant: Mambaforge
+        miniforge-version: latest
+        activate-environment: arc_env
+        python-version: 3.7
+        use-mamba: true
 
     - name: Install codecov
       run: micromamba install -y -c conda-forge codecov
