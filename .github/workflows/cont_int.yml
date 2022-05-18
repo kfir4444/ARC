@@ -17,8 +17,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up miniconda Python 3.7
-      uses: conda-incubator/setup-miniconda@v2
+    - name: Set up micromamba Python 3.7
+      uses: mamba-org/provision-with-micromamba@main
       with:
         environment-file: environment.yml
         activate-environment: arc_env
@@ -26,7 +26,7 @@ jobs:
         auto-activate-base: false
 
     - name: Install codecov
-      run: conda install -y -c conda-forge codecov
+      run: micromamba install -y -c conda-forge codecov
 
     - name: Install dependencies
       run: |
