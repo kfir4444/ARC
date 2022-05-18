@@ -27,7 +27,7 @@ jobs:
         use-mamba: true
 
     - name: Install codecov
-      run: micromamba install -y -c conda-forge codecov
+      run: mamba install -y -c conda-forge codecov
 
     - name: Install dependencies
       run: |
