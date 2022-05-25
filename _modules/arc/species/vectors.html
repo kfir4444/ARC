@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -33,6 +33,8 @@
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -249,7 +251,7 @@
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">vdot</span><span class="p">(</span><span class="n">v2_x_v1</span><span class="p">,</span> <span class="n">v3</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">dihedral</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">-</span> <span class="n">dihedral</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dihedral</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">VectorsError</span><span class="p">(</span><span class="s1">&#39;Could not calculate a dihedral angle&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">VectorsError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not calculate a dihedral angle for</span><span class="se">\n</span><span class="s1">v1: </span><span class="si">{</span><span class="n">v1</span><span class="si">}</span><span class="s1">, v2: </span><span class="si">{</span><span class="n">v2</span><span class="si">}</span><span class="s1">, v3: </span><span class="si">{</span><span class="n">v3</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
     <span class="n">conversion</span> <span class="o">=</span> <span class="mi">180</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="k">if</span> <span class="s1">&#39;degs&#39;</span> <span class="ow">in</span> <span class="n">units</span> <span class="k">else</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">dihedral</span> <span class="o">*</span> <span class="n">conversion</span><span class="p">)</span></div>
 
@@ -566,7 +568,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2021, Alon Grinberg Dana
+        &copy; Copyright 2018-2022, Alon Grinberg Dana
 
     </p>
   </div>

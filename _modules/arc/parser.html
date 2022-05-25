@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -33,6 +33,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -272,62 +274,64 @@
     <span class="k">return</span> <span class="n">freqs</span></div>
 
 
-<div class="viewcode-block" id="parse_normal_displacement_modes"><a class="viewcode-back" href="../../api/parser.html#arc.parser.parse_normal_displacement_modes">[docs]</a><span class="k">def</span> <span class="nf">parse_normal_displacement_modes</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-                                    <span class="n">software</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                                    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<div class="viewcode-block" id="parse_normal_mode_displacement"><a class="viewcode-back" href="../../api/parser.html#arc.parser.parse_normal_mode_displacement">[docs]</a><span class="k">def</span> <span class="nf">parse_normal_mode_displacement</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                                   <span class="n">software</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                                   <span class="n">raise_error</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                                   <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parse frequencies and normal displacement modes.</span>
+<span class="sd">    Parse frequencies and normal mode displacement.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        path (str): The path to the log file.</span>
 <span class="sd">        software (str, optional): The software to used to generate the log file.</span>
+<span class="sd">        raise_error (bool, optional): Whether to raise an error if the ESS isn&#39;t implemented.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        NotImplementedError: If the parser is not implemented for the ESS this log file belongs to.</span>
 
 <span class="sd">    Returns: Tuple[np.ndarray, np.ndarray]</span>
-<span class="sd">        The frequencies (in cm^-1) and The normal displacement modes.</span>
+<span class="sd">        The frequencies (in cm^-1) and the normal mode displacements.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">software</span> <span class="o">=</span> <span class="n">software</span> <span class="ow">or</span> <span class="n">determine_ess</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-    <span class="n">freqs</span><span class="p">,</span> <span class="n">normal_disp_modes</span><span class="p">,</span> <span class="n">normal_disp_modes_entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">freqs</span><span class="p">,</span> <span class="n">normal_mode_disp</span><span class="p">,</span> <span class="n">normal_mode_disp_entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
     <span class="n">num_of_freqs_per_line</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">software</span> <span class="o">==</span> <span class="s1">&#39;gaussian&#39;</span><span class="p">:</span>
-        <span class="n">parse</span><span class="p">,</span> <span class="n">parse_normal_disp_modes</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span>
+        <span class="n">parse</span><span class="p">,</span> <span class="n">parse_normal_mode_disp</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;Harmonic frequencies (cm**-1)&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                 <span class="c1"># e.g.:  Harmonic frequencies (cm**-1), IR intensities (KM/Mole), Raman scattering</span>
                 <span class="n">parse</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="n">parse</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
-                <span class="n">parse_normal_disp_modes</span> <span class="o">=</span> <span class="kc">False</span>
-                <span class="n">normal_disp_modes</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">normal_disp_modes_entries</span><span class="p">)</span>
-                <span class="n">normal_disp_modes_entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="n">parse_normal_mode_disp</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">normal_mode_disp</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">normal_mode_disp_entries</span><span class="p">)</span>
+                <span class="n">normal_mode_disp_entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">parse</span> <span class="ow">and</span> <span class="s1">&#39;Frequencies --&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                 <span class="c1"># e.g.:  Frequencies --    -18.0696               127.6948               174.9499</span>
                 <span class="n">splits</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
                 <span class="n">freqs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="k">for</span> <span class="n">freq</span> <span class="ow">in</span> <span class="n">splits</span><span class="p">[</span><span class="mi">2</span><span class="p">:])</span>
                 <span class="n">num_of_freqs_per_line</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
-                <span class="n">normal_disp_modes_entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">parse_normal_disp_modes</span><span class="p">:</span>
+                <span class="n">normal_mode_disp_entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="n">parse_normal_mode_disp</span><span class="p">:</span>
                 <span class="c1"># parsing, e.g.:</span>
                 <span class="c1">#   Atom  AN      X      Y      Z        X      Y      Z        X      Y      Z</span>
                 <span class="c1">#      1   6    -0.00   0.00  -0.09    -0.00   0.00  -0.18     0.00  -0.00  -0.16</span>
                 <span class="c1">#      2   7    -0.00   0.00  -0.10     0.00  -0.00   0.02     0.00  -0.00   0.26</span>
                 <span class="n">splits</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">:]</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_freqs_per_line</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">normal_disp_modes_entries</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="n">normal_disp_modes_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">())</span>
-                    <span class="n">normal_disp_modes_entries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">:</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">])</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">normal_mode_disp_entries</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="n">normal_mode_disp_entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">())</span>
+                    <span class="n">normal_mode_disp_entries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="mi">3</span> <span class="o">*</span> <span class="n">i</span><span class="p">:</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">3</span><span class="p">])</span>
             <span class="k">elif</span> <span class="n">parse</span> <span class="ow">and</span> <span class="s1">&#39;Atom  AN      X      Y      Z&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
-                <span class="n">parse_normal_disp_modes</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">parse_normal_mode_disp</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">elif</span> <span class="n">parse</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="s1">&#39;-------------------&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                 <span class="n">parse</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;parse_normal_displacement_modes is currently not implemented for </span><span class="si">{</span><span class="n">software</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">raise_error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;parse_normal_mode_displacement() is currently not implemented for </span><span class="si">{</span><span class="n">software</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
     <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">normal_disp_modes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">normal_disp_modes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">normal_disp_modes</span></div>
+    <span class="n">normal_mode_disp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">normal_mode_disp</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">freqs</span><span class="p">,</span> <span class="n">normal_mode_disp</span></div>
 
 
 <div class="viewcode-block" id="parse_geometry"><a class="viewcode-back" href="../../api/parser.html#arc.parser.parse_geometry">[docs]</a><span class="k">def</span> <span class="nf">parse_geometry</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">]]:</span>
@@ -380,7 +384,7 @@
 <span class="sd">        The T1 parameter.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s1">&#39;Could not find file </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not find file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">log</span> <span class="o">=</span> <span class="n">ess_factory</span><span class="p">(</span><span class="n">fullpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">check_for_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">t1</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">get_T1_diagnostic</span><span class="p">()</span>
@@ -425,7 +429,7 @@
 <span class="sd">        The calculated zero point energy in kJ/mol.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="s1">&#39;Could not find file </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Could not find file </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">log</span> <span class="o">=</span> <span class="n">ess_factory</span><span class="p">(</span><span class="n">fullpath</span><span class="o">=</span><span class="n">path</span><span class="p">,</span> <span class="n">check_for_errors</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">zpe</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">load_zero_point_energy</span><span class="p">()</span> <span class="o">*</span> <span class="mf">0.001</span>  <span class="c1"># convert to kJ/mol</span>
@@ -526,7 +530,7 @@
 <span class="sd">                                            &#39;trsh&#39;: &lt;list, job.ess_trsh_methods&gt;}&gt;</span>
 <span class="sd">                         },</span>
 
-<span class="sd">        The dihedrals angles of the original conformer</span>
+<span class="sd">        The dihedral angles of the original conformer</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">software</span> <span class="o">=</span> <span class="n">software</span> <span class="ow">or</span> <span class="n">determine_ess</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;directed_scan_type&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s1">&#39;ess_</span><span class="si">{</span><span class="n">software</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -1012,13 +1016,13 @@
         <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
         <span class="k">while</span> <span class="n">line</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;search&#39;</span><span class="p">:</span>
-                <span class="c1"># Stop searching if found enough blocks</span>
+                <span class="c1"># Stop searching if enough blocks were found.</span>
                 <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">blks</span><span class="p">))</span> <span class="o">==</span> <span class="n">block_count</span><span class="p">:</span>
                     <span class="k">break</span>
-                <span class="c1"># Check if matching the head pattern</span>
+                <span class="c1"># Check if matching the head pattern.</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">match</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="n">head_pat</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
-                    <span class="c1"># Switch to &#39;read&#39; mode</span>
+                    <span class="c1"># Switch to &#39;read&#39; mode.</span>
                     <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
                         <span class="n">tail_repeat</span> <span class="o">=</span> <span class="mi">0</span>
                         <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;read&#39;</span>
@@ -1029,7 +1033,7 @@
                 <span class="n">match</span> <span class="o">=</span> <span class="n">search</span><span class="p">(</span><span class="n">tail_pat</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
                     <span class="n">tail_repeat</span> <span class="o">+=</span> <span class="mi">1</span>
-                    <span class="c1"># If see enough tail patterns, switch to &#39;search&#39; mode</span>
+                    <span class="c1"># If there are enough tail patterns, switch to &#39;search&#39; mode.</span>
                     <span class="k">if</span> <span class="n">tail_repeat</span> <span class="o">==</span> <span class="n">tail_count</span><span class="p">:</span>
                         <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;search&#39;</span>
             <span class="n">line</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
@@ -1151,7 +1155,7 @@
                     <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">scan_args</span><span class="p">[</span><span class="s1">&#39;scan&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">ic_dict</span><span class="p">[</span><span class="s1">&#39;atoms&#39;</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
                 <span class="n">ic_dict</span><span class="p">[</span><span class="s1">&#39;scan&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Currently doesn&#39;t support scan of angles</span>
+                <span class="c1"># Currently doesn&#39;t support scan of angles.</span>
                 <span class="n">ic_dict</span><span class="p">[</span><span class="s1">&#39;scan&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;parse_ic_info() can currently only parse Gaussian output &#39;</span>
@@ -1245,7 +1249,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2021, Alon Grinberg Dana
+        &copy; Copyright 2018-2022, Alon Grinberg Dana
 
     </p>
   </div>

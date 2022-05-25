@@ -21,10 +21,10 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -33,6 +33,8 @@
   
   <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -179,7 +181,8 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -187,7 +190,9 @@
 
 <span class="kn">from</span> <span class="nn">arkane.ess</span> <span class="kn">import</span> <span class="n">ess_factory</span><span class="p">,</span> <span class="n">GaussianLog</span><span class="p">,</span> <span class="n">MolproLog</span><span class="p">,</span> <span class="n">OrcaLog</span><span class="p">,</span> <span class="n">QChemLog</span><span class="p">,</span> <span class="n">TeraChemLog</span>
 <span class="kn">import</span> <span class="nn">rmgpy</span>
+<span class="kn">from</span> <span class="nn">rmgpy.molecule.atomtype</span> <span class="kn">import</span> <span class="n">ATOMTYPES</span>
 <span class="kn">from</span> <span class="nn">rmgpy.molecule.element</span> <span class="kn">import</span> <span class="n">get_element</span>
+<span class="kn">from</span> <span class="nn">rmgpy.molecule.molecule</span> <span class="kn">import</span> <span class="n">Atom</span><span class="p">,</span> <span class="n">Bond</span><span class="p">,</span> <span class="n">Molecule</span>
 <span class="kn">from</span> <span class="nn">rmgpy.qm.qmdata</span> <span class="kn">import</span> <span class="n">QMData</span>
 <span class="kn">from</span> <span class="nn">rmgpy.qm.symmetry</span> <span class="kn">import</span> <span class="n">PointGroupCalculator</span>
 
@@ -195,23 +200,21 @@
 <span class="kn">from</span> <span class="nn">arc.imports</span> <span class="kn">import</span> <span class="n">settings</span>
 
 
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">rmgpy.reaction</span> <span class="kn">import</span> <span class="n">Reaction</span>
+    <span class="kn">from</span> <span class="nn">arc.reaction</span> <span class="kn">import</span> <span class="n">ARCReaction</span>
+
+
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s1">&#39;arc&#39;</span><span class="p">)</span>
 
-<span class="c1"># absolute path to the ARC folder</span>
+<span class="c1"># Absolute path to the ARC folder.</span>
 <span class="n">ARC_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)))</span>
-<span class="c1"># absolute path to RMG-Py folder</span>
+<span class="c1"># Absolute path to RMG-Py folder.</span>
 <span class="n">RMG_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">rmgpy</span><span class="o">.</span><span class="vm">__file__</span><span class="p">)))</span>
-<span class="c1"># absolute path to RMG-database folder</span>
+<span class="c1"># Absolute path to RMG-database folder.</span>
 <span class="n">RMG_DATABASE_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">rmgpy</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;database.directory&#39;</span><span class="p">]))</span>
 
 <span class="n">VERSION</span> <span class="o">=</span> <span class="s1">&#39;1.1.0&#39;</span>
-
-<span class="c1"># define default values for using the optional GCN to predict TS guesses</span>
-<span class="c1"># default assumption is that TS-GCN is installed in the same parent folder as the ARC repository</span>
-<span class="n">TS_GCN_PATH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">ARC_PATH</span><span class="p">),</span> <span class="s1">&#39;TS-GCN&#39;</span><span class="p">)</span>
-<span class="c1"># default environment name for this repo is `ts_gcn`</span>
-<span class="n">TS_GCN_PYTHON</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">executable</span><span class="p">))),</span>
-                             <span class="s1">&#39;ts_gcn&#39;</span><span class="p">,</span> <span class="s1">&#39;bin&#39;</span><span class="p">,</span> <span class="s1">&#39;python&#39;</span><span class="p">)</span>
 
 
 <span class="n">default_job_types</span><span class="p">,</span> <span class="n">servers</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;default_job_types&#39;</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;servers&#39;</span><span class="p">]</span>
@@ -336,7 +339,7 @@
             <span class="k">raise</span> <span class="n">SettingsError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Recognized ESS software are Gaussian, QChem, Molpro, Orca, TeraChem, Psi4, &#39;</span>
                                 <span class="sa">f</span><span class="s1">&#39;or OneDMin. Got: </span><span class="si">{</span><span class="n">ess</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">server</span> <span class="ow">in</span> <span class="n">server_list</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="n">server</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">servers</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">server</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">and</span> <span class="n">server</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">servers</span><span class="o">.</span><span class="n">keys</span><span class="p">()]:</span>
                 <span class="n">server_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">servers</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
                 <span class="k">raise</span> <span class="n">SettingsError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Recognized servers are </span><span class="si">{</span><span class="n">server_names</span><span class="si">}</span><span class="s1">. Got: </span><span class="si">{</span><span class="n">server</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Using the following ESS settings:</span><span class="se">\n</span><span class="si">{</span><span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">settings_dict</span><span class="p">)</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -357,7 +360,7 @@
 <span class="sd">        project_directory (str, optional): The path to the project directory.</span>
 <span class="sd">        verbose (int, optional): Specify the amount of log text seen.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># backup and delete an existing log file if needed</span>
+    <span class="c1"># Backup and delete an existing log file if needed.</span>
     <span class="k">if</span> <span class="n">project_directory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">log_file</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_directory</span><span class="p">,</span> <span class="s1">&#39;log_and_restart_archive&#39;</span><span class="p">)):</span>
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">project_directory</span><span class="p">,</span> <span class="s1">&#39;log_and_restart_archive&#39;</span><span class="p">))</span>
@@ -369,7 +372,7 @@
     <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="c1"># Use custom level names for cleaner log output</span>
+    <span class="c1"># Use custom level names for cleaner log output.</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="p">,</span> <span class="s1">&#39;Critical: &#39;</span><span class="p">)</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">,</span> <span class="s1">&#39;Error: &#39;</span><span class="p">)</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">,</span> <span class="s1">&#39;Warning: &#39;</span><span class="p">)</span>
@@ -377,27 +380,27 @@
     <span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
 
-    <span class="c1"># Create formatter and add to handlers</span>
+    <span class="c1"># Create formatter and add to handlers.</span>
     <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(levelname)s%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
 
-    <span class="c1"># Remove old handlers before adding ours</span>
+    <span class="c1"># Remove old handlers before adding ours.</span>
     <span class="k">while</span> <span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="n">logger</span><span class="o">.</span><span class="n">handlers</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
-    <span class="c1"># Create console handler; send everything to stdout rather than stderr</span>
+    <span class="c1"># Create console handler; send everything to stdout rather than stderr.</span>
     <span class="n">ch</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
     <span class="n">ch</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">ch</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
 
-    <span class="c1"># Create file handler</span>
+    <span class="c1"># Create file handler.</span>
     <span class="n">fh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">log_file</span><span class="p">)</span>
     <span class="n">fh</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">verbose</span><span class="p">)</span>
     <span class="n">fh</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
     <span class="n">log_header</span><span class="p">(</span><span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">)</span>
 
-    <span class="c1"># ignore Paramiko, cclib, and matplotlib warnings:</span>
+    <span class="c1"># Ignore Paramiko, cclib, and matplotlib warnings:</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s1">&#39;.*paramiko.*&#39;</span><span class="p">)</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s1">&#39;.*cclib.*&#39;</span><span class="p">)</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="n">action</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">module</span><span class="o">=</span><span class="s1">&#39;.*matplotlib.*&#39;</span><span class="p">)</span>
@@ -419,7 +422,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        project (str): The ARC project name to be logged in the header.</span>
-<span class="sd">        level: The desired logging level.</span>
+<span class="sd">        level (int, optional): The desired logging level.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;ARC execution initiated on </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">asctime</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -435,13 +438,13 @@
 
     <span class="n">paths_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ARC&#39;</span><span class="p">:</span> <span class="n">ARC_PATH</span><span class="p">,</span> <span class="s1">&#39;RMG-Py&#39;</span><span class="p">:</span> <span class="n">RMG_PATH</span><span class="p">,</span> <span class="s1">&#39;RMG-database&#39;</span><span class="p">:</span> <span class="n">RMG_DATABASE_PATH</span><span class="p">}</span>
     <span class="k">for</span> <span class="n">repo</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="c1"># Extract HEAD git commit</span>
+        <span class="c1"># Extract HEAD git commit.</span>
         <span class="n">head</span><span class="p">,</span> <span class="n">date</span> <span class="o">=</span> <span class="n">get_git_commit</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="n">branch_name</span> <span class="o">=</span> <span class="n">get_git_branch</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">head</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">date</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;The current git HEAD for </span><span class="si">{</span><span class="n">repo</span><span class="si">}</span><span class="s1"> is:&#39;</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">head</span><span class="si">}</span><span class="se">\n</span><span class="s1">    </span><span class="si">{</span><span class="n">date</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">branch_name</span> <span class="ow">and</span> <span class="n">branch_name</span> <span class="o">!=</span> <span class="s1">&#39;master&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">branch_name</span> <span class="ow">and</span> <span class="n">branch_name</span> <span class="o">!=</span> <span class="s1">&#39;main&#39;</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;    (running on the </span><span class="si">{</span><span class="n">branch_name</span><span class="si">}</span><span class="s1"> branch)</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -457,7 +460,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        execution_time (str): The overall execution time for ARC.</span>
-<span class="sd">        level: The desired logging level.</span>
+<span class="sd">        level (int, optional): The desired logging level.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;Total execution time: </span><span class="si">{</span><span class="n">execution_time</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -548,12 +551,22 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">raise</span> <span class="n">InputError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;path must be a string, got </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1"> which is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Creating a restart file...&#39;</span><span class="p">)</span>
     <span class="n">yaml_str</span> <span class="o">=</span> <span class="n">to_yaml</span><span class="p">(</span><span class="n">py_content</span><span class="o">=</span><span class="n">content</span><span class="p">)</span>
     <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml_str</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="from_yaml"><a class="viewcode-back" href="../../api/common.html#arc.common.from_yaml">[docs]</a><span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="n">yaml_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read a YAML string and decode to the respective Python object.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        yaml_str (str): The YAML string content.</span>
+<span class="sd">    Returns: Union[dict, list]</span>
+<span class="sd">        The respective Python object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">stream</span><span class="o">=</span><span class="n">yaml_str</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="to_yaml"><a class="viewcode-back" href="../../api/common.html#arc.common.to_yaml">[docs]</a><span class="k">def</span> <span class="nf">to_yaml</span><span class="p">(</span><span class="n">py_content</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -694,76 +707,103 @@
     <span class="k">return</span> <span class="n">r</span></div>
 
 
-<div class="viewcode-block" id="colliding_atoms"><a class="viewcode-back" href="../../api/common.html#arc.common.colliding_atoms">[docs]</a><span class="k">def</span> <span class="nf">colliding_atoms</span><span class="p">(</span><span class="n">xyz</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-                    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.55</span><span class="p">,</span>
-                    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Check whether atoms are too close to each other.</span>
-<span class="sd">    A default threshold of 55% the covalent radii of two atoms is used.</span>
-<span class="sd">    For example:</span>
-<span class="sd">    - C-O collide at 55% * 1.42 A = 0.781 A</span>
-<span class="sd">    - N-N collide at 55% * 1.42 A = 0.781 A</span>
-<span class="sd">    - C-N collide at 55% * 1.47 A = 0.808 A</span>
-<span class="sd">    - C-H collide at 55% * 1.07 A = 0.588 A</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        xyz (dict): The Cartesian coordinates.</span>
-<span class="sd">        threshold (float, optional): The collision threshold to use.</span>
-
-<span class="sd">    Returns: bool</span>
-<span class="sd">        ``True`` if they are colliding, ``False`` otherwise.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="c1"># monoatomic</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="n">geometry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.8897259886</span> <span class="k">for</span> <span class="n">coord</span> <span class="ow">in</span> <span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">]])</span>  <span class="c1"># convert A to Bohr</span>
-    <span class="n">qcel_out</span> <span class="o">=</span> <span class="n">qcel</span><span class="o">.</span><span class="n">molutil</span><span class="o">.</span><span class="n">guess_connectivity</span><span class="p">(</span><span class="n">symbols</span><span class="o">=</span><span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">],</span> <span class="n">geometry</span><span class="o">=</span><span class="n">geometry</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">qcel_out</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">qcel_out</span><span class="p">))</span></div>
-
-
-<span class="c1"># a bond length dictionary of single bonds, Angstrom</span>
+<span class="c1"># A bond length dictionary of single bonds in Angstrom.</span>
 <span class="c1"># https://sites.google.com/site/chempendix/bond-lengths</span>
 <span class="c1"># https://courses.lumenlearning.com/suny-potsdam-organicchemistry/chapter/1-3-basics-of-bonding/</span>
-<span class="c1"># &#39;N-O&#39; is taken from the geometry of NH2OH</span>
-<span class="c1"># todo: combine with partial charge to allow greater distance, e.g., as in N2O4</span>
-<span class="c1"># todo: or replace with NBO analysis</span>
-<span class="n">SINGLE_BOND_LENGTH</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Br-Br&#39;</span><span class="p">:</span> <span class="mf">2.29</span><span class="p">,</span> <span class="s1">&#39;Br-Cr&#39;</span><span class="p">:</span> <span class="mf">1.94</span><span class="p">,</span> <span class="s1">&#39;Br-H&#39;</span><span class="p">:</span> <span class="mf">1.41</span><span class="p">,</span>
-                      <span class="s1">&#39;C-C&#39;</span><span class="p">:</span> <span class="mf">1.54</span><span class="p">,</span> <span class="s1">&#39;C-Cl&#39;</span><span class="p">:</span> <span class="mf">1.77</span><span class="p">,</span> <span class="s1">&#39;C-F&#39;</span><span class="p">:</span> <span class="mf">1.35</span><span class="p">,</span> <span class="s1">&#39;C-H&#39;</span><span class="p">:</span> <span class="mf">1.09</span><span class="p">,</span> <span class="s1">&#39;C-I&#39;</span><span class="p">:</span> <span class="mf">2.13</span><span class="p">,</span>
-                      <span class="s1">&#39;C-N&#39;</span><span class="p">:</span> <span class="mf">1.47</span><span class="p">,</span> <span class="s1">&#39;C-O&#39;</span><span class="p">:</span> <span class="mf">1.43</span><span class="p">,</span> <span class="s1">&#39;C-P&#39;</span><span class="p">:</span> <span class="mf">1.87</span><span class="p">,</span> <span class="s1">&#39;C-S&#39;</span><span class="p">:</span> <span class="mf">1.81</span><span class="p">,</span> <span class="s1">&#39;C-Si&#39;</span><span class="p">:</span> <span class="mf">1.86</span><span class="p">,</span>
-                      <span class="s1">&#39;Cl-Cl&#39;</span><span class="p">:</span> <span class="mf">1.99</span><span class="p">,</span> <span class="s1">&#39;Cl-H&#39;</span><span class="p">:</span> <span class="mf">1.27</span><span class="p">,</span> <span class="s1">&#39;Cl-N&#39;</span><span class="p">:</span> <span class="mf">1.75</span><span class="p">,</span> <span class="s1">&#39;Cl-Si&#39;</span><span class="p">:</span> <span class="mf">2.03</span><span class="p">,</span> <span class="s1">&#39;Cl-P&#39;</span><span class="p">:</span> <span class="mf">2.03</span><span class="p">,</span> <span class="s1">&#39;Cl-S&#39;</span><span class="p">:</span> <span class="mf">2.07</span><span class="p">,</span>
-                      <span class="s1">&#39;F-F&#39;</span><span class="p">:</span> <span class="mf">1.42</span><span class="p">,</span> <span class="s1">&#39;F-H&#39;</span><span class="p">:</span> <span class="mf">0.92</span><span class="p">,</span> <span class="s1">&#39;F-P&#39;</span><span class="p">:</span> <span class="mf">1.57</span><span class="p">,</span> <span class="s1">&#39;F-S&#39;</span><span class="p">:</span> <span class="mf">1.56</span><span class="p">,</span> <span class="s1">&#39;F-Si&#39;</span><span class="p">:</span> <span class="mf">1.56</span><span class="p">,</span> <span class="s1">&#39;F-Xe&#39;</span><span class="p">:</span> <span class="mf">1.90</span><span class="p">,</span>
-                      <span class="s1">&#39;H-H&#39;</span><span class="p">:</span> <span class="mf">0.74</span><span class="p">,</span> <span class="s1">&#39;H-I&#39;</span><span class="p">:</span> <span class="mf">1.61</span><span class="p">,</span> <span class="s1">&#39;H-N&#39;</span><span class="p">:</span> <span class="mf">1.04</span><span class="p">,</span> <span class="s1">&#39;H-O&#39;</span><span class="p">:</span> <span class="mf">0.96</span><span class="p">,</span> <span class="s1">&#39;H-P&#39;</span><span class="p">:</span> <span class="mf">1.42</span><span class="p">,</span> <span class="s1">&#39;H-S&#39;</span><span class="p">:</span> <span class="mf">1.34</span><span class="p">,</span> <span class="s1">&#39;H-Si&#39;</span><span class="p">:</span> <span class="mf">1.48</span><span class="p">,</span>
-                      <span class="s1">&#39;I-I&#39;</span><span class="p">:</span> <span class="mf">2.66</span><span class="p">,</span>
-                      <span class="s1">&#39;N-N&#39;</span><span class="p">:</span> <span class="mf">1.45</span><span class="p">,</span> <span class="s1">&#39;N-O&#39;</span><span class="p">:</span> <span class="mf">1.44</span><span class="p">,</span>
-                      <span class="s1">&#39;O-O&#39;</span><span class="p">:</span> <span class="mf">1.48</span><span class="p">,</span> <span class="s1">&#39;O-P&#39;</span><span class="p">:</span> <span class="mf">1.63</span><span class="p">,</span> <span class="s1">&#39;O-S&#39;</span><span class="p">:</span> <span class="mf">1.58</span><span class="p">,</span> <span class="s1">&#39;O-Si&#39;</span><span class="p">:</span> <span class="mf">1.66</span><span class="p">,</span>
-                      <span class="s1">&#39;P-P&#39;</span><span class="p">:</span> <span class="mf">2.21</span><span class="p">,</span>
-                      <span class="s1">&#39;S-S&#39;</span><span class="p">:</span> <span class="mf">2.05</span><span class="p">,</span>
-                      <span class="s1">&#39;Si-Si&#39;</span><span class="p">:</span> <span class="mf">2.35</span><span class="p">,</span>
+<span class="c1"># &#39;N-O&#39; is taken from NH2OH, &#39;N+_N+&#39; and &#39;N+_O-&#39; are taken from N2O4.</span>
+<span class="c1"># &#39;H_H&#39; was artificially modified from 0.74 to 1.0 since it collides quickly at 0.55.</span>
+<span class="n">SINGLE_BOND_LENGTH</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Br_Br&#39;</span><span class="p">:</span> <span class="mf">2.29</span><span class="p">,</span> <span class="s1">&#39;Br_Cr&#39;</span><span class="p">:</span> <span class="mf">1.94</span><span class="p">,</span> <span class="s1">&#39;Br_H&#39;</span><span class="p">:</span> <span class="mf">1.41</span><span class="p">,</span>
+                      <span class="s1">&#39;C_C&#39;</span><span class="p">:</span> <span class="mf">1.54</span><span class="p">,</span> <span class="s1">&#39;C_Cl&#39;</span><span class="p">:</span> <span class="mf">1.77</span><span class="p">,</span> <span class="s1">&#39;C_F&#39;</span><span class="p">:</span> <span class="mf">1.35</span><span class="p">,</span> <span class="s1">&#39;C_H&#39;</span><span class="p">:</span> <span class="mf">1.09</span><span class="p">,</span> <span class="s1">&#39;C_I&#39;</span><span class="p">:</span> <span class="mf">2.13</span><span class="p">,</span>
+                      <span class="s1">&#39;C_N&#39;</span><span class="p">:</span> <span class="mf">1.47</span><span class="p">,</span> <span class="s1">&#39;C_O&#39;</span><span class="p">:</span> <span class="mf">1.43</span><span class="p">,</span> <span class="s1">&#39;C_P&#39;</span><span class="p">:</span> <span class="mf">1.87</span><span class="p">,</span> <span class="s1">&#39;C_S&#39;</span><span class="p">:</span> <span class="mf">1.81</span><span class="p">,</span> <span class="s1">&#39;C_Si&#39;</span><span class="p">:</span> <span class="mf">1.86</span><span class="p">,</span>
+                      <span class="s1">&#39;Cl_Cl&#39;</span><span class="p">:</span> <span class="mf">1.99</span><span class="p">,</span> <span class="s1">&#39;Cl_H&#39;</span><span class="p">:</span> <span class="mf">1.27</span><span class="p">,</span> <span class="s1">&#39;Cl_N&#39;</span><span class="p">:</span> <span class="mf">1.75</span><span class="p">,</span> <span class="s1">&#39;Cl_Si&#39;</span><span class="p">:</span> <span class="mf">2.03</span><span class="p">,</span> <span class="s1">&#39;Cl_P&#39;</span><span class="p">:</span> <span class="mf">2.03</span><span class="p">,</span> <span class="s1">&#39;Cl_S&#39;</span><span class="p">:</span> <span class="mf">2.07</span><span class="p">,</span>
+                      <span class="s1">&#39;F_F&#39;</span><span class="p">:</span> <span class="mf">1.42</span><span class="p">,</span> <span class="s1">&#39;F_H&#39;</span><span class="p">:</span> <span class="mf">0.92</span><span class="p">,</span> <span class="s1">&#39;F_P&#39;</span><span class="p">:</span> <span class="mf">1.57</span><span class="p">,</span> <span class="s1">&#39;F_S&#39;</span><span class="p">:</span> <span class="mf">1.56</span><span class="p">,</span> <span class="s1">&#39;F_Si&#39;</span><span class="p">:</span> <span class="mf">1.56</span><span class="p">,</span> <span class="s1">&#39;F_Xe&#39;</span><span class="p">:</span> <span class="mf">1.90</span><span class="p">,</span>
+                      <span class="s1">&#39;H_H&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;H_I&#39;</span><span class="p">:</span> <span class="mf">1.61</span><span class="p">,</span> <span class="s1">&#39;H_N&#39;</span><span class="p">:</span> <span class="mf">1.04</span><span class="p">,</span> <span class="s1">&#39;H_O&#39;</span><span class="p">:</span> <span class="mf">0.96</span><span class="p">,</span> <span class="s1">&#39;H_P&#39;</span><span class="p">:</span> <span class="mf">1.42</span><span class="p">,</span> <span class="s1">&#39;H_S&#39;</span><span class="p">:</span> <span class="mf">1.34</span><span class="p">,</span> <span class="s1">&#39;H_Si&#39;</span><span class="p">:</span> <span class="mf">1.48</span><span class="p">,</span>
+                      <span class="s1">&#39;I_I&#39;</span><span class="p">:</span> <span class="mf">2.66</span><span class="p">,</span>
+                      <span class="s1">&#39;N_N&#39;</span><span class="p">:</span> <span class="mf">1.45</span><span class="p">,</span> <span class="s1">&#39;N+1_N+1&#39;</span><span class="p">:</span> <span class="mf">1.81</span><span class="p">,</span> <span class="s1">&#39;N_O&#39;</span><span class="p">:</span> <span class="mf">1.44</span><span class="p">,</span> <span class="s1">&#39;N+1_O-1&#39;</span><span class="p">:</span> <span class="mf">1.2</span><span class="p">,</span>
+                      <span class="s1">&#39;O_O&#39;</span><span class="p">:</span> <span class="mf">1.48</span><span class="p">,</span> <span class="s1">&#39;O_P&#39;</span><span class="p">:</span> <span class="mf">1.63</span><span class="p">,</span> <span class="s1">&#39;O_S&#39;</span><span class="p">:</span> <span class="mf">1.58</span><span class="p">,</span> <span class="s1">&#39;O_Si&#39;</span><span class="p">:</span> <span class="mf">1.66</span><span class="p">,</span>
+                      <span class="s1">&#39;P_P&#39;</span><span class="p">:</span> <span class="mf">2.21</span><span class="p">,</span>
+                      <span class="s1">&#39;S_S&#39;</span><span class="p">:</span> <span class="mf">2.05</span><span class="p">,</span>
+                      <span class="s1">&#39;Si_Si&#39;</span><span class="p">:</span> <span class="mf">2.35</span><span class="p">,</span>
                       <span class="p">}</span>
 
 
-<div class="viewcode-block" id="get_single_bond_length"><a class="viewcode-back" href="../../api/common.html#arc.common.get_single_bond_length">[docs]</a><span class="k">def</span> <span class="nf">get_single_bond_length</span><span class="p">(</span><span class="n">symbol1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-                           <span class="n">symbol2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<div class="viewcode-block" id="get_single_bond_length"><a class="viewcode-back" href="../../api/common.html#arc.common.get_single_bond_length">[docs]</a><span class="k">def</span> <span class="nf">get_single_bond_length</span><span class="p">(</span><span class="n">symbol_1</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                           <span class="n">symbol_2</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                           <span class="n">charge_1</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                           <span class="n">charge_2</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
                            <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the an approximate for a single bond length between two elements.</span>
+<span class="sd">    Get an approximate for a single bond length between two elements.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        symbol1 (str): Symbol 1.</span>
-<span class="sd">        symbol2 (str): Symbol 2.</span>
+<span class="sd">        symbol_1 (str): Symbol 1.</span>
+<span class="sd">        symbol_2 (str): Symbol 2.</span>
+<span class="sd">        charge_1 (int, optional): The partial charge of the atom represented by ``symbol_1``.</span>
+<span class="sd">        charge_2 (int, optional): The partial charge of the atom represented by ``symbol_2``.</span>
 
 <span class="sd">    Returns: float</span>
 <span class="sd">        The estimated single bond length in Angstrom.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">bond1</span><span class="p">,</span> <span class="n">bond2</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">symbol1</span><span class="p">,</span> <span class="n">symbol2</span><span class="p">]),</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">symbol2</span><span class="p">,</span> <span class="n">symbol1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">charge_1</span> <span class="ow">and</span> <span class="n">charge_2</span><span class="p">:</span>
+        <span class="n">symbol_1</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">symbol_1</span><span class="si">}{</span><span class="s1">&#39;+&#39;</span> <span class="k">if</span> <span class="n">charge_1</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="si">}{</span><span class="n">charge_1</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">symbol_2</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">symbol_2</span><span class="si">}{</span><span class="s1">&#39;+&#39;</span> <span class="k">if</span> <span class="n">charge_2</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="si">}{</span><span class="n">charge_2</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">bond1</span><span class="p">,</span> <span class="n">bond2</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">symbol_1</span><span class="p">,</span> <span class="n">symbol_2</span><span class="p">]),</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">symbol_2</span><span class="p">,</span> <span class="n">symbol_1</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">bond1</span> <span class="ow">in</span> <span class="n">SINGLE_BOND_LENGTH</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">SINGLE_BOND_LENGTH</span><span class="p">[</span><span class="n">bond1</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">bond2</span> <span class="ow">in</span> <span class="n">SINGLE_BOND_LENGTH</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="k">return</span> <span class="n">SINGLE_BOND_LENGTH</span><span class="p">[</span><span class="n">bond2</span><span class="p">]</span>
     <span class="k">return</span> <span class="mf">2.5</span></div>
+
+
+<div class="viewcode-block" id="get_bonds_from_dmat"><a class="viewcode-back" href="../../api/common.html#arc.common.get_bonds_from_dmat">[docs]</a><span class="k">def</span> <span class="nf">get_bonds_from_dmat</span><span class="p">(</span><span class="n">dmat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+                        <span class="n">elements</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+                        <span class="n">charges</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">tolerance</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.2</span><span class="p">,</span>
+                        <span class="n">bond_lone_hydrogens</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Guess the connectivity of a molecule from its distance matrix representation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dmat (np.ndarray): An NxN matrix of atom distances in Angstrom.</span>
+<span class="sd">        elements (List[str]): The corresponding element list in the same atomic order.</span>
+<span class="sd">        charges (List[int], optional): A corresponding list of formal atomic charges.</span>
+<span class="sd">        tolerance (float, optional): A factor by which the single bond length threshold is multiplied for the check.</span>
+<span class="sd">        bond_lone_hydrogens (bool, optional): Whether to assign a bond to hydrogen atoms which were not identified</span>
+<span class="sd">                                              as bonded. If so, the closest atom will be considered.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List[Tuple[int, int]]:</span>
+<span class="sd">            A list of tuple entries, each represents a bond and contains sorted atom indices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dmat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">!=</span> <span class="n">dmat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">dmat</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The dimensions of the DMat </span><span class="si">{</span><span class="n">dmat</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s1"> must be equal to the number of elements </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">bonds</span><span class="p">,</span> <span class="n">bonded_hydrogens</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">charges</span> <span class="o">=</span> <span class="n">charges</span> <span class="ow">or</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span>
+    <span class="c1"># Heavy atoms</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e_1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">elements</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">e_2</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">elements</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">j</span> <span class="ow">and</span> <span class="n">e_1</span> <span class="o">!=</span> <span class="s1">&#39;H&#39;</span> <span class="ow">and</span> <span class="n">e_2</span> <span class="o">!=</span> <span class="s1">&#39;H&#39;</span> <span class="ow">and</span> <span class="n">dmat</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">tolerance</span> <span class="o">*</span> \
+                    <span class="n">get_single_bond_length</span><span class="p">(</span><span class="n">symbol_1</span><span class="o">=</span><span class="n">e_1</span><span class="p">,</span>
+                                           <span class="n">symbol_2</span><span class="o">=</span><span class="n">e_2</span><span class="p">,</span>
+                                           <span class="n">charge_1</span><span class="o">=</span><span class="n">charges</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                                           <span class="n">charge_2</span><span class="o">=</span><span class="n">charges</span><span class="p">[</span><span class="n">j</span><span class="p">]):</span>
+                <span class="n">bonds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])))</span>
+    <span class="c1"># Hydrogen atoms except for H--H bonds, make sure each H has only one bond (the closest heavy atom).</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e_1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">elements</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">e_1</span> <span class="o">==</span> <span class="s1">&#39;H&#39;</span><span class="p">:</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">get_extremum_index</span><span class="p">(</span><span class="n">lst</span><span class="o">=</span><span class="n">dmat</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">return_min</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">skip_values</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span> <span class="ow">and</span> <span class="p">(</span><span class="n">elements</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">&#39;H&#39;</span><span class="p">):</span>
+                <span class="n">bonds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])))</span>
+                <span class="n">bonded_hydrogens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="c1"># Lone hydrogens, also important for the H2 molecule.</span>
+    <span class="k">if</span> <span class="n">bond_lone_hydrogens</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">e_1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">elements</span><span class="p">):</span>
+            <span class="n">j</span> <span class="o">=</span> <span class="n">get_extremum_index</span><span class="p">(</span><span class="n">lst</span><span class="o">=</span><span class="n">dmat</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">return_min</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">skip_values</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">bond</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">([</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span> <span class="ow">and</span> <span class="n">e_1</span> <span class="o">==</span> <span class="s1">&#39;H&#39;</span> <span class="ow">and</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bonded_hydrogens</span> <span class="ow">and</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bonded_hydrogens</span> <span class="ow">and</span> <span class="n">bond</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bonds</span><span class="p">:</span>
+                <span class="n">bonds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">bonds</span></div>
 
 
 <div class="viewcode-block" id="determine_symmetry"><a class="viewcode-back" href="../../api/common.html#arc.common.determine_symmetry">[docs]</a><span class="k">def</span> <span class="nf">determine_symmetry</span><span class="p">(</span><span class="n">xyz</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
@@ -777,22 +817,22 @@
 <span class="sd">        - The external symmetry number.</span>
 <span class="sd">        - ``1`` if no chiral centers are present, ``2`` if chiral centers are present.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">atom_numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>  <span class="c1"># List of atomic numbers</span>
+    <span class="n">atom_numbers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]:</span>
         <span class="n">atom_numbers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_element</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
-    <span class="c1"># coords is an N x 3 numpy.ndarray of atomic coordinates in the same order as `atom_numbers`</span>
+    <span class="c1"># Coords is an N x 3 numpy.ndarray of atomic coordinates in the same order as `atom_numbers`.</span>
     <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">unique_id</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>  <span class="c1"># Just some name that the SYMMETRY code gives to one of its jobs</span>
-    <span class="n">scr_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ARC_PATH</span><span class="p">,</span> <span class="s1">&#39;scratch&#39;</span><span class="p">)</span>  <span class="c1"># Scratch directory that the SYMMETRY code writes its files in</span>
+    <span class="n">unique_id</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>  <span class="c1"># Just some name that the SYMMETRY code gives to one of its jobs.</span>
+    <span class="n">scr_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;/tmp&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetry_scratch&#39;</span><span class="p">)</span>  <span class="c1"># Scratch directory that the SYMMETRY code writes its files in.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">scr_dir</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">scr_dir</span><span class="p">)</span>
     <span class="n">symmetry</span> <span class="o">=</span> <span class="n">optical_isomers</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">qmdata</span> <span class="o">=</span> <span class="n">QMData</span><span class="p">(</span>
-        <span class="n">groundStateDegeneracy</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Only needed to check if valid QMData</span>
+        <span class="n">groundStateDegeneracy</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Only needed to check if valid QMData.</span>
         <span class="n">numberOfAtoms</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">atom_numbers</span><span class="p">),</span>
         <span class="n">atomicNumbers</span><span class="o">=</span><span class="n">atom_numbers</span><span class="p">,</span>
         <span class="n">atomCoords</span><span class="o">=</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="s1">&#39;angstrom&#39;</span><span class="p">),</span>
-        <span class="n">energy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;kcal/mol&#39;</span><span class="p">)</span>  <span class="c1"># Only needed to avoid error</span>
+        <span class="n">energy</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;kcal/mol&#39;</span><span class="p">)</span>  <span class="c1"># Dummy</span>
     <span class="p">)</span>
     <span class="n">symmetry_settings</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="p">(),</span> <span class="nb">dict</span><span class="p">(</span><span class="n">symmetryPath</span><span class="o">=</span><span class="s1">&#39;symmetry&#39;</span><span class="p">,</span> <span class="n">scratchDirectory</span><span class="o">=</span><span class="n">scr_dir</span><span class="p">))()</span>
     <span class="n">pgc</span> <span class="o">=</span> <span class="n">PointGroupCalculator</span><span class="p">(</span><span class="n">symmetry_settings</span><span class="p">,</span> <span class="n">unique_id</span><span class="p">,</span> <span class="n">qmdata</span><span class="p">)</span>
@@ -817,7 +857,7 @@
 
 <span class="sd">    Returns: Tuple[list, bool]</span>
 <span class="sd">        - The indices of the atoms in the top (either 0-index or 1-index, as requested).</span>
-<span class="sd">        - Whether the top has heavy atoms (is not just a hydrogen atom). True if it has heavy atoms.</span>
+<span class="sd">        - Whether the top has heavy atoms (is not just a hydrogen atom). ``True`` if it has heavy atoms.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">top</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="n">explored_atom_list</span><span class="p">,</span> <span class="n">atom_list_to_explore1</span><span class="p">,</span> <span class="n">atom_list_to_explore2</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom1</span><span class="p">],</span> <span class="p">[</span><span class="n">atom2</span><span class="p">],</span> <span class="p">[]</span>
@@ -841,26 +881,63 @@
                   <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A helper function for finding the extremum (either minimum or maximum) of a list of numbers (int/float)</span>
-<span class="sd">    where some of the entries might be ``None``.</span>
+<span class="sd">    where some entries could be ``None``.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        lst (list): The list.</span>
 <span class="sd">        return_min (bool, optional): Whether to return the minimum or the maximum.</span>
 <span class="sd">                                    ``True`` for minimum, ``False`` for maximum, ``True`` by default.</span>
 
-<span class="sd">    Returns: int</span>
+<span class="sd">    Returns: Optional[Union[int, None]]</span>
 <span class="sd">        The entry with the minimal/maximal value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">elif</span> <span class="nb">all</span><span class="p">([</span><span class="n">entry</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">]):</span>
         <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">lst</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">return_min</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">min</span><span class="p">([</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">max</span><span class="p">([</span><span class="n">entry</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">if</span> <span class="n">entry</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="get_extremum_index"><a class="viewcode-back" href="../../api/common.html#arc.common.get_extremum_index">[docs]</a><span class="k">def</span> <span class="nf">get_extremum_index</span><span class="p">(</span><span class="n">lst</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span>
+                       <span class="n">return_min</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                       <span class="n">skip_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+                       <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A helper function for finding the extremum (either minimum or maximum) of a list of numbers (int/float)</span>
+<span class="sd">    where some entries could be ``None``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lst (list): The list.</span>
+<span class="sd">        return_min (bool, optional): Whether to return the minimum or the maximum.</span>
+<span class="sd">                                    ``True`` for minimum, ``False`` for maximum, ``True`` by default.</span>
+<span class="sd">        skip_values (list, optional): Values to skip when checking for extermum, e.g., 0.</span>
+
+<span class="sd">    Returns: Optional[Union[int, None]]</span>
+<span class="sd">        The index of an entry with the minimal/maximal value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="nb">all</span><span class="p">([</span><span class="n">entry</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">skip_values</span> <span class="o">=</span> <span class="n">skip_values</span> <span class="o">+</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="k">if</span> <span class="n">skip_values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+    <span class="n">extremum_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lst</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">skip_values</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">return_min</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">entry</span> <span class="o">&lt;</span> <span class="n">lst</span><span class="p">[</span><span class="n">extremum_index</span><span class="p">]:</span>
+                <span class="n">extremum_index</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">entry</span> <span class="o">&gt;</span> <span class="n">lst</span><span class="p">[</span><span class="n">extremum_index</span><span class="p">]:</span>
+                <span class="n">extremum_index</span> <span class="o">=</span> <span class="n">i</span>
+    <span class="k">return</span> <span class="n">extremum_index</span></div>
 
 
 <div class="viewcode-block" id="sort_two_lists_by_the_first"><a class="viewcode-back" href="../../api/common.html#arc.common.sort_two_lists_by_the_first">[docs]</a><span class="k">def</span> <span class="nf">sort_two_lists_by_the_first</span><span class="p">(</span><span class="n">list1</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="kc">None</span><span class="p">]],</span>
@@ -908,6 +985,26 @@
     <span class="k">for</span> <span class="n">counter</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sorted_indices</span><span class="p">):</span>
         <span class="n">sorted_list2</span><span class="p">[</span><span class="n">counter</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_list2</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">sorted_list1</span><span class="p">,</span> <span class="n">sorted_list2</span></div>
+
+
+<div class="viewcode-block" id="check_that_all_entries_are_in_list"><a class="viewcode-back" href="../../api/common.html#arc.common.check_that_all_entries_are_in_list">[docs]</a><span class="k">def</span> <span class="nf">check_that_all_entries_are_in_list</span><span class="p">(</span><span class="n">list_1</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">],</span> <span class="n">list_2</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check that all entries from ``list_2`` are in ``list_1``, and that the lists are the same length.</span>
+<span class="sd">    Useful for testing that two lists are equal regardless of entry order.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        list_1 (list, tuple): Entries are floats or ints (could also be None).</span>
+<span class="sd">        list_2 (list, tuple): Entries could be anything.</span>
+
+<span class="sd">    Returns: bool</span>
+<span class="sd">        Whether all entries from ``list_2`` are in ``list_1`` and the lists are the same length.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_1</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_2</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">list_2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">entry</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">list_1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
 
 
 <div class="viewcode-block" id="key_by_val"><a class="viewcode-back" href="../../api/common.html#arc.common.key_by_val">[docs]</a><span class="k">def</span> <span class="nf">key_by_val</span><span class="p">(</span><span class="n">dictionary</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -971,7 +1068,7 @@
                         <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span>
                         <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A helper function for checking whether two xyz&#39;s are almost equal.</span>
+<span class="sd">    A helper function for checking whether two xyz&#39;s are almost equal. Also checks equal symbols.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        xyz1 (dict): Cartesian coordinates.</span>
@@ -984,6 +1081,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xyz1</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xyz2</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;xyz1 and xyz2 must be dictionaries, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">xyz1</span><span class="p">)</span><span class="si">}</span><span class="s1"> and </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">xyz2</span><span class="p">)</span><span class="si">}</span><span class="s1">:</span><span class="se">\n</span><span class="si">{</span><span class="n">xyz1</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">xyz2</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">symbol_1</span><span class="p">,</span> <span class="n">symbol_2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xyz1</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">],</span> <span class="n">xyz2</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">symbol_1</span> <span class="o">!=</span> <span class="n">symbol_2</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot compare coords, xyz1 and xyz2 have different symbols:&quot;</span>
+                           <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">xyz1</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">and:</span><span class="se">\n</span><span class="si">{</span><span class="n">xyz2</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">xyz_coord1</span><span class="p">,</span> <span class="n">xyz_coord2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xyz1</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">],</span> <span class="n">xyz2</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">]):</span>
         <span class="k">for</span> <span class="n">xyz1_c</span><span class="p">,</span> <span class="n">xyz2_c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xyz_coord1</span><span class="p">,</span> <span class="n">xyz_coord2</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">([</span><span class="n">xyz1_c</span><span class="p">],</span> <span class="p">[</span><span class="n">xyz2_c</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">):</span>
@@ -991,23 +1092,23 @@
     <span class="k">return</span> <span class="kc">True</span></div>
 
 
-<div class="viewcode-block" id="almost_equal_coords_lists"><a class="viewcode-back" href="../../api/common.html#arc.common.almost_equal_coords_lists">[docs]</a><span class="k">def</span> <span class="nf">almost_equal_coords_lists</span><span class="p">(</span><span class="n">xyz1</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-                              <span class="n">xyz2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<div class="viewcode-block" id="almost_equal_coords_lists"><a class="viewcode-back" href="../../api/common.html#arc.common.almost_equal_coords_lists">[docs]</a><span class="k">def</span> <span class="nf">almost_equal_coords_lists</span><span class="p">(</span><span class="n">xyz1</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">dict</span><span class="p">],</span>
+                              <span class="n">xyz2</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span> <span class="nb">dict</span><span class="p">],</span>
                               <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-05</span><span class="p">,</span>
                               <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-08</span><span class="p">,</span>
                               <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A helper function for checking two lists of xyz&#39;s has at least one entry in each that is almost equal.</span>
-<span class="sd">    Useful for comparing xyz&#39;s in unit tests.</span>
+<span class="sd">    A helper function for checking two lists of xyzs has at least one entry in each that is almost equal.</span>
+<span class="sd">    Useful for comparing xyzs in unit tests.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        xyz1 (list, dict): Either a dict-format xyz, or a list of them.</span>
-<span class="sd">        xyz2 (list, dict): Either a dict-format xyz, or a list of them.</span>
+<span class="sd">        xyz1 (Union[List[dict], dict]): Either a dict-format xyz, or a list of them.</span>
+<span class="sd">        xyz2 (Union[List[dict], dict]): Either a dict-format xyz, or a list of them.</span>
 <span class="sd">        rtol (float, optional): The relative tolerance parameter.</span>
 <span class="sd">        atol (float, optional): The absolute tolerance parameter.</span>
 
 <span class="sd">    Returns: bool</span>
-<span class="sd">        Whether at least one entry in each input xyz&#39;s is almost equal to an entry in the other xyz.</span>
+<span class="sd">        Whether at least one entry in each input xyzs is almost equal to an entry in the other xyz.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xyz1</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">xyz1</span> <span class="o">=</span> <span class="p">[</span><span class="n">xyz1</span><span class="p">]</span>
@@ -1018,8 +1119,8 @@
             <span class="k">if</span> <span class="n">xyz1_entry</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">xyz2_entry</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]:</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">almost_equal_coords</span><span class="p">(</span><span class="n">xyz1_entry</span><span class="p">,</span> <span class="n">xyz2_entry</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="n">atol</span><span class="p">):</span>
-                <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Anytime find one match, return `True`</span>
-    <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># If no match is found</span></div>
+                <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
 
 
 <div class="viewcode-block" id="is_notebook"><a class="viewcode-back" href="../../api/common.html#arc.common.is_notebook">[docs]</a><span class="k">def</span> <span class="nf">is_notebook</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1032,13 +1133,13 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">shell</span> <span class="o">=</span> <span class="n">get_ipython</span><span class="p">()</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
         <span class="k">if</span> <span class="n">shell</span> <span class="o">==</span> <span class="s1">&#39;ZMQInteractiveShell&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Jupyter notebook or qtconsole</span>
+            <span class="k">return</span> <span class="kc">True</span>  <span class="c1"># Jupyter notebook or qtconsole.</span>
         <span class="k">elif</span> <span class="n">shell</span> <span class="o">==</span> <span class="s1">&#39;TerminalInteractiveShell&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Terminal running IPython</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Terminal running IPython.</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Other type (?)</span>
     <span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Probably standard Python interpreter</span></div>
+        <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># Probably standard Python interpreter.</span></div>
 
 
 <div class="viewcode-block" id="is_str_float"><a class="viewcode-back" href="../../api/common.html#arc.common.is_str_float">[docs]</a><span class="k">def</span> <span class="nf">is_str_float</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -1246,7 +1347,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        l1 (list): The first list.</span>
 <span class="sd">        l2 (list): The second list.</span>
-<span class="sd">        order_by_first_list (bool, optional: Whether to order the output list using the order of the values in the first list.</span>
+<span class="sd">        order_by_first_list (bool, optional): Whether to order the output list using the order of the values in the first list.</span>
 <span class="sd">        return_unique (bool, optional): Whether to return only unique values in the intersection of two lists.</span>
 
 <span class="sd">    Returns: list</span>
@@ -1378,7 +1479,7 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Expected a list, got </span><span class="si">{</span><span class="n">descriptor</span><span class="si">}</span><span class="s1"> which is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">descriptor</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">descriptor</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
         <span class="n">descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">descriptor</span><span class="p">]</span>
-    <span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># anything other than 1 is translated to -1</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="n">direction</span> <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>  <span class="c1"># Anything other than 1 is translated to -1.</span>
     <span class="n">new_descriptor</span> <span class="o">=</span> <span class="p">[</span><span class="n">convert_list_index_0_to_1</span><span class="p">(</span><span class="n">entry</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">descriptor</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="n">item</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">entry</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">new_descriptor</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Got an illegal value when converting:</span><span class="se">\n</span><span class="si">{</span><span class="n">descriptor</span><span class="si">}</span><span class="se">\n</span><span class="s1">into:</span><span class="se">\n</span><span class="si">{</span><span class="n">new_descriptor</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -1406,6 +1507,155 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
         <span class="n">new_list</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">new_list</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">new_list</span></div>
+
+
+<div class="viewcode-block" id="rmg_mol_to_dict_repr"><a class="viewcode-back" href="../../api/common.html#arc.common.rmg_mol_to_dict_repr">[docs]</a><span class="k">def</span> <span class="nf">rmg_mol_to_dict_repr</span><span class="p">(</span><span class="n">mol</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span>
+                         <span class="n">reset_atom_ids</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                         <span class="n">testing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                         <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a dict representation of an RMG ``Molecule`` object instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol (Molecule): The RMG ``Molecule`` object instance.</span>
+<span class="sd">        reset_atom_ids (bool, optional): Whether to reset the atom IDs in the .mol Molecule attribute.</span>
+<span class="sd">                                         Useful when copying the object to avoid duplicate atom IDs between</span>
+<span class="sd">                                         different object instances.</span>
+<span class="sd">        testing (bool, optional): Whether this is called during a test, in which case atom IDs should be deterministic.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: The corresponding dict representation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">mol</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">testing</span><span class="p">:</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">:</span>
+            <span class="n">atom</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="n">counter</span>
+            <span class="n">counter</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">id</span> <span class="ow">or</span> <span class="n">reset_atom_ids</span><span class="p">:</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">assign_atom_ids</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;atoms&#39;</span><span class="p">:</span> <span class="p">[{</span><span class="s1">&#39;element&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;number&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">number</span><span class="p">,</span>
+                                   <span class="s1">&#39;isotope&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">isotope</span><span class="p">,</span>
+                                   <span class="p">},</span>
+                       <span class="s1">&#39;radical_electrons&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">radical_electrons</span><span class="p">,</span>
+                       <span class="s1">&#39;charge&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">charge</span><span class="p">,</span>
+                       <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                       <span class="s1">&#39;lone_pairs&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">lone_pairs</span><span class="p">,</span>
+                       <span class="s1">&#39;id&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                       <span class="s1">&#39;props&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">props</span><span class="p">,</span>
+                       <span class="s1">&#39;atomtype&#39;</span><span class="p">:</span> <span class="n">atom</span><span class="o">.</span><span class="n">atomtype</span><span class="o">.</span><span class="n">label</span><span class="p">,</span>
+                       <span class="s1">&#39;edges&#39;</span><span class="p">:</span> <span class="p">{</span><span class="n">atom_2</span><span class="o">.</span><span class="n">id</span><span class="p">:</span> <span class="n">bond</span><span class="o">.</span><span class="n">order</span>
+                                 <span class="k">for</span> <span class="n">atom_2</span><span class="p">,</span> <span class="n">bond</span> <span class="ow">in</span> <span class="n">atom</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+                       <span class="p">}</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">],</span>
+            <span class="s1">&#39;multiplicity&#39;</span><span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">multiplicity</span><span class="p">,</span>
+            <span class="s1">&#39;props&#39;</span><span class="p">:</span> <span class="n">mol</span><span class="o">.</span><span class="n">props</span><span class="p">,</span>
+            <span class="s1">&#39;atom_order&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">]</span>
+            <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="rmg_mol_from_dict_repr"><a class="viewcode-back" href="../../api/common.html#arc.common.rmg_mol_from_dict_repr">[docs]</a><span class="k">def</span> <span class="nf">rmg_mol_from_dict_repr</span><span class="p">(</span><span class="n">representation</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                           <span class="n">is_ts</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                           <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Molecule</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a dict representation of an RMG ``Molecule`` object instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        representation (dict): A dict representation of an RMG ``Molecule`` object instance.</span>
+<span class="sd">        is_ts (bool, optional): Whether the ``Molecule`` represents a TS.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ``Molecule``: The corresponding RMG ``Molecule`` object instance.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mol</span> <span class="o">=</span> <span class="n">Molecule</span><span class="p">(</span><span class="n">multiplicity</span><span class="o">=</span><span class="n">representation</span><span class="p">[</span><span class="s1">&#39;multiplicity&#39;</span><span class="p">],</span>
+                   <span class="n">props</span><span class="o">=</span><span class="n">representation</span><span class="p">[</span><span class="s1">&#39;props&#39;</span><span class="p">])</span>
+    <span class="n">atoms</span> <span class="o">=</span> <span class="p">{</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]:</span> <span class="n">Atom</span><span class="p">(</span><span class="n">element</span><span class="o">=</span><span class="n">get_element</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;element&#39;</span><span class="p">][</span><span class="s1">&#39;number&#39;</span><span class="p">],</span>
+                                                       <span class="n">isotope</span><span class="o">=</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;element&#39;</span><span class="p">][</span><span class="s1">&#39;isotope&#39;</span><span class="p">]),</span>
+                                   <span class="n">radical_electrons</span><span class="o">=</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;radical_electrons&#39;</span><span class="p">],</span>
+                                   <span class="n">charge</span><span class="o">=</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;charge&#39;</span><span class="p">],</span>
+                                   <span class="n">lone_pairs</span><span class="o">=</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;lone_pairs&#39;</span><span class="p">],</span>
+                                   <span class="nb">id</span><span class="o">=</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                                   <span class="n">props</span><span class="o">=</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;props&#39;</span><span class="p">],</span>
+                                   <span class="p">)</span> <span class="k">for</span> <span class="n">atom_dict</span> <span class="ow">in</span> <span class="n">representation</span><span class="p">[</span><span class="s1">&#39;atoms&#39;</span><span class="p">]}</span>
+    <span class="k">for</span> <span class="n">atom_dict</span> <span class="ow">in</span> <span class="n">representation</span><span class="p">[</span><span class="s1">&#39;atoms&#39;</span><span class="p">]:</span>
+        <span class="n">atoms</span><span class="p">[</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">atomtype</span> <span class="o">=</span> <span class="n">ATOMTYPES</span><span class="p">[</span><span class="n">atom_dict</span><span class="p">[</span><span class="s1">&#39;atomtype&#39;</span><span class="p">]]</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">atoms</span><span class="p">[</span><span class="n">atom_id</span><span class="p">]</span> <span class="k">for</span> <span class="n">atom_id</span> <span class="ow">in</span> <span class="n">representation</span><span class="p">[</span><span class="s1">&#39;atom_order&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">atom_1</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">atoms</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">for</span> <span class="n">atom_2_id</span><span class="p">,</span> <span class="n">bond_order</span> <span class="ow">in</span> <span class="n">representation</span><span class="p">[</span><span class="s1">&#39;atoms&#39;</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;edges&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">bond</span> <span class="o">=</span> <span class="n">Bond</span><span class="p">(</span><span class="n">atom_1</span><span class="p">,</span> <span class="n">atoms</span><span class="p">[</span><span class="n">atom_2_id</span><span class="p">],</span> <span class="n">bond_order</span><span class="p">)</span>
+            <span class="n">mol</span><span class="o">.</span><span class="n">add_bond</span><span class="p">(</span><span class="n">bond</span><span class="p">)</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">update_atomtypes</span><span class="p">(</span><span class="n">raise_exception</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">mol</span><span class="o">.</span><span class="n">update_multiplicity</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_ts</span><span class="p">:</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">identify_ring_membership</span><span class="p">()</span>
+        <span class="n">mol</span><span class="o">.</span><span class="n">update_connectivity_values</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">mol</span></div>
+
+
+<div class="viewcode-block" id="calc_rmsd"><a class="viewcode-back" href="../../api/common.html#arc.common.calc_rmsd">[docs]</a><span class="k">def</span> <span class="nf">calc_rmsd</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
+              <span class="n">y</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">],</span>
+              <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compute the root-mean-square deviation between two matrices.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x (np.array): Matrix 1.</span>
+<span class="sd">        y (np.array): Matrix 2.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        float: The RMSD score of two matrices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">y</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">y</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">sqr_sum</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="n">rmsd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sqr_sum</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">rmsd</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_check_r_n_p_symbols_between_rmg_and_arc_rxns</span><span class="p">(</span><span class="n">arc_reaction</span><span class="p">:</span> <span class="s1">&#39;ARCReaction&#39;</span><span class="p">,</span>
+                                                  <span class="n">rmg_reactions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Reaction&#39;</span><span class="p">],</span>
+                                                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A helper function to check that atom symbols are in the correct order between an ARC reaction</span>
+<span class="sd">    and its corresponding RMG reactions generated by the get_rmg_reactions_from_arc_reaction() function.</span>
+<span class="sd">    Used internally for testing.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        arc_reaction (ARCReaction): The ARCReaction object to inspect.</span>
+<span class="sd">        rmg_reactions (List[&#39;Reaction&#39;]): Entries are RMG Reaction objects to inspect.</span>
+<span class="sd">                                          Could contain either Species or Molecule object as reactants/products.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        bool: Whether atom symbols are in the same respective order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">num_rs</span><span class="p">,</span> <span class="n">num_ps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arc_reaction</span><span class="o">.</span><span class="n">r_species</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">arc_reaction</span><span class="o">.</span><span class="n">p_species</span><span class="p">)</span>
+    <span class="n">arc_r_symbols</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">arc_reaction</span><span class="o">.</span><span class="n">r_species</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_rs</span><span class="p">)))]</span>
+    <span class="n">arc_p_symbols</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">symbol</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">arc_reaction</span><span class="o">.</span><span class="n">p_species</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_ps</span><span class="p">)))]</span>
+    <span class="k">for</span> <span class="n">rmg_reaction</span> <span class="ow">in</span> <span class="n">rmg_reactions</span><span class="p">:</span>
+        <span class="n">rmg_r_symbols</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">symbol</span>
+                         <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">rmg_reaction</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">atoms</span>
+                                                  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rmg_reaction</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Molecule</span><span class="p">)</span>
+                                                  <span class="k">else</span> <span class="n">rmg_reaction</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">molecule</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">atoms</span>
+                                                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_rs</span><span class="p">)))]</span>
+        <span class="n">rmg_p_symbols</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">element</span><span class="o">.</span><span class="n">symbol</span>
+                         <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="nb">tuple</span><span class="p">(</span><span class="n">rmg_reaction</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">atoms</span>
+                                                  <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rmg_reaction</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">Molecule</span><span class="p">)</span>
+                                                  <span class="k">else</span> <span class="n">rmg_reaction</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">molecule</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">atoms</span>
+                                                  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_ps</span><span class="p">)))]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">symbol_1</span> <span class="o">!=</span> <span class="n">symbol_2</span> <span class="k">for</span> <span class="n">symbol_1</span><span class="p">,</span> <span class="n">symbol_2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arc_r_symbols</span><span class="p">,</span> <span class="n">rmg_r_symbols</span><span class="p">)):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Different element order in reactants between ARC and RMG:&#39;</span><span class="p">)</span>  <span class="c1"># Don&#39;t modify to logging.</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">arc_r_symbols</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">rmg_r_symbols</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">symbol_1</span> <span class="o">!=</span> <span class="n">symbol_2</span> <span class="k">for</span> <span class="n">symbol_1</span><span class="p">,</span> <span class="n">symbol_2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arc_p_symbols</span><span class="p">,</span> <span class="n">rmg_p_symbols</span><span class="p">)):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Different element order in products between ARC and RMG:&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">arc_p_symbols</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">rmg_p_symbols</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">result</span>
 </pre></div>
 
            </div>
@@ -1418,7 +1668,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2021, Alon Grinberg Dana
+        &copy; Copyright 2018-2022, Alon Grinberg Dana
 
     </p>
   </div>
