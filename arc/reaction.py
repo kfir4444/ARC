@@ -9,7 +9,7 @@ from rmgpy.species import Species
 
 import arc.rmgdb as rmgdb
 from arc.common import get_logger
-from arc.exceptions import ReactionError, InputError
+from arc.exceptions import ReactionError, InputError, SpeciesError
 from arc.species.converter import (check_xyz_dict,
                                    sort_xyz_using_indices,
                                    translate_to_center_of_mass,
@@ -155,6 +155,7 @@ class ARCReaction(object):
             try:    
                 self._atom_map = map_reaction(rxn=self)
             except:
+                logger.warning(f'Reaction {self} could not be mapped. Trying to flip and map the reverse{self.flip_reaction()}')
                 try:
                     self._atom_map = flip_map(map_reaction(rxn=self.flip_reaction()))
                 except:
