@@ -1333,7 +1333,6 @@ def cuts_on_cycle_of_labeled_mol(spc: 'ARCSpecies')-> bool:
             True if the scission site is on a ring, None if the speceis is unlabeled, False otherwise"""
     if not any([atom.label for atom in spc.mol.atoms]):
         raise ValueError("cuts_on_cycle_of_labeled_mol recives labeled ARCSpecies only, got an unlabeld species")
-        return None
     
     if not spc.mol.is_cyclic():
         return False
