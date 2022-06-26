@@ -1056,9 +1056,10 @@ def map_rxn(rxn: 'ARCReaction',
     label_species_atoms(products)
     r_cuts = cut_species_for_mapping(reactants, loc_r) 
     p_cuts = cut_species_for_mapping(products, loc_p)
-
+    
     make_bond_changes(rxn, r_cuts, r_label_dict)
-
+    make_bond_changes(rxn, p_cuts, p_label_dict)
+    
     # step 4:
     pairs_of_reactants_and_products = pairing_reactants_and_products_for_mapping(r_cuts, p_cuts)
 
@@ -1155,6 +1156,12 @@ def make_bond_changes(rxn: 'ARCReaction',
                     except:
                         continue
                     sort_atoms_in_decending_label_order(r_cut.mol)
+    for spc in r_cuts:
+        for atom in spc.mol.atoms:
+            if atom.charge != 0:
+                atom.charge == 0
+                atom.increment_radical()
+                spc.mol.update()
 
 
 def cut_species_for_mapping(spcs: List[ARCSpecies],
@@ -1320,7 +1327,7 @@ def glue_maps(maps,pairs_of_reactant_and_products):
     for Map,pair in zip(maps,pairs_of_reactant_and_products):
         r_atoms = pair[0].mol.atoms
         p_atoms = pair[1].mol.atoms
-        for map_index,r_atom in zip(Map,r_atoms):
+        for map_index,r_atom in zip(Map, r_atoms):
             am_dict[int(r_atom.label)] = int(p_atoms[map_index].label)
     return [val for key, val in sorted(am_dict.items(), key=lambda item: item[0])]
 
