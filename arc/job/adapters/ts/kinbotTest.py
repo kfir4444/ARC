@@ -70,6 +70,38 @@ class TestKinBotAdapter(unittest.TestCase):
         self.assertTrue(rxn1.ts_species.ts_guesses[0].success)
         self.assertTrue(rxn1.ts_species.ts_guesses[1].success)
 
+        rxn2 = ARCReaction(reactants=['C[CH]C'], products=['CC[CH2]'])
+        rxn2.rmg_reaction = Reaction(reactants=[Species().from_smiles('C[CH]C')],
+                                     products=[Species().from_smiles('CC[CH2]')])
+        rxn2.determine_family(rmg_database=self.rmgdb)
+        rxn2.arc_species_from_rmg_reaction()
+        self.assertEqual(rxn2.family.label, 'intra_H_migration')
+        kinbot2 = KinBotAdapter(job_type='tsg',
+                                reactions=[rxn2],
+                                testing=True,
+                                project='test',
+                                project_directory=os.path.join(ARC_PATH, 'arc', 'testing', 'test_KinBot', 'tst1'),
+                                )
+        kinbot2.execute_incore()
+        self.assertTrue(rxn2.ts_species.is_ts)
+        self.assertEqual(rxn2.ts_species.charge, 0)
+        self.assertEqual(rxn2.ts_species.multiplicity, 2)
+        self.assertEqual(len(rxn2.ts_species.ts_guesses), 2)
+        self.assertEqual(rxn2.ts_species.ts_guesses[0].initial_xyz['symbols'],
+                         ('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H',  'H', 'H'))
+        self.assertEqual(rxn2.ts_species.ts_guesses[1].initial_xyz['symbols'],
+                         ('C', 'C', 'C', 'H', 'H', 'H', 'H', 'H',  'H', 'H'))
+        self.assertEqual(len(rxn2.ts_species.ts_guesses[1].initial_xyz['coords']), 10)
+        self.assertEqual(rxn2.ts_species.ts_guesses[0].method, 'kinbot')
+        self.assertEqual(rxn2.ts_species.ts_guesses[1].method, 'kinbot')
+        self.assertEqual(rxn2.ts_species.ts_guesses[0].method_index, 0)
+        self.assertEqual(rxn2.ts_species.ts_guesses[1].method_index, 1)
+        self.assertEqual(rxn2.ts_species.ts_guesses[0].method_direction, 'F')
+        self.assertEqual(rxn2.ts_species.ts_guesses[1].method_direction, 'R')
+        self.assertLess(rxn2.ts_species.ts_guesses[0].execution_time.seconds, 300)  # 0:00:00.003082
+        self.assertTrue(rxn2.ts_species.ts_guesses[0].success)
+        self.assertTrue(rxn2.ts_species.ts_guesses[1].success)
+
     @classmethod
     def tearDownClass(cls):
         """
