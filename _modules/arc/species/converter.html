@@ -24,6 +24,7 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
@@ -167,7 +168,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">qcelemental</span> <span class="k">as</span> <span class="nn">qcel</span>
 <span class="kn">from</span> <span class="nn">ase</span> <span class="kn">import</span> <span class="n">Atoms</span>
@@ -175,16 +176,24 @@
 <span class="kn">from</span> <span class="nn">openbabel</span> <span class="kn">import</span> <span class="n">pybel</span>
 <span class="kn">from</span> <span class="nn">rdkit</span> <span class="kn">import</span> <span class="n">Chem</span>
 <span class="kn">from</span> <span class="nn">rdkit.Chem</span> <span class="kn">import</span> <span class="n">rdMolTransforms</span> <span class="k">as</span> <span class="n">rdMT</span>
+<span class="kn">from</span> <span class="nn">rdkit.Chem</span> <span class="kn">import</span> <span class="n">SDWriter</span>
 <span class="kn">from</span> <span class="nn">rdkit.Chem.rdchem</span> <span class="kn">import</span> <span class="n">AtomValenceException</span>
 
 <span class="kn">from</span> <span class="nn">arkane.common</span> <span class="kn">import</span> <span class="n">get_element_mass</span><span class="p">,</span> <span class="n">mass_by_symbol</span><span class="p">,</span> <span class="n">symbol_by_number</span>
+<span class="kn">import</span> <span class="nn">rmgpy.constants</span> <span class="k">as</span> <span class="nn">constants</span>
 <span class="kn">from</span> <span class="nn">rmgpy.exceptions</span> <span class="kn">import</span> <span class="n">AtomTypeError</span>
 <span class="kn">from</span> <span class="nn">rmgpy.molecule.molecule</span> <span class="kn">import</span> <span class="n">Atom</span><span class="p">,</span> <span class="n">Bond</span><span class="p">,</span> <span class="n">Molecule</span>
 <span class="kn">from</span> <span class="nn">rmgpy.quantity</span> <span class="kn">import</span> <span class="n">ArrayQuantity</span>
 <span class="kn">from</span> <span class="nn">rmgpy.species</span> <span class="kn">import</span> <span class="n">Species</span>
 <span class="kn">from</span> <span class="nn">rmgpy.statmech</span> <span class="kn">import</span> <span class="n">Conformer</span>
 
-<span class="kn">from</span> <span class="nn">arc.common</span> <span class="kn">import</span> <span class="n">almost_equal_lists</span><span class="p">,</span> <span class="n">calc_rmsd</span><span class="p">,</span> <span class="n">get_atom_radius</span><span class="p">,</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">is_str_float</span>
+<span class="kn">from</span> <span class="nn">arc.common</span> <span class="kn">import</span> <span class="p">(</span><span class="n">almost_equal_lists</span><span class="p">,</span>
+                        <span class="n">calc_rmsd</span><span class="p">,</span>
+                        <span class="n">get_atom_radius</span><span class="p">,</span>
+                        <span class="n">get_logger</span><span class="p">,</span>
+                        <span class="n">generate_resonance_structures</span><span class="p">,</span>
+                        <span class="n">is_str_float</span><span class="p">,</span>
+                        <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">arc.exceptions</span> <span class="kn">import</span> <span class="n">ConverterError</span><span class="p">,</span> <span class="n">InputError</span><span class="p">,</span> <span class="n">SanitizationError</span><span class="p">,</span> <span class="n">SpeciesError</span>
 <span class="kn">from</span> <span class="nn">arc.species.xyz_to_2d</span> <span class="kn">import</span> <span class="n">MolGraph</span>
 <span class="kn">from</span> <span class="nn">arc.species.xyz_to_smiles</span> <span class="kn">import</span> <span class="n">xyz_to_smiles</span>
@@ -195,6 +204,9 @@
                               <span class="n">get_parameter_from_atom_indices</span><span class="p">,</span>
                               <span class="n">zmat_to_coords</span><span class="p">,</span>
                               <span class="n">xyz_to_zmat</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">arc.species.species</span> <span class="kn">import</span> <span class="n">ARCSpecies</span>
 
 
 <span class="n">ob</span><span class="o">.</span><span class="n">obErrorLog</span><span class="o">.</span><span class="n">SetOutputLevel</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -240,7 +252,7 @@
         <span class="kn">from</span> <span class="nn">arc.parser</span> <span class="kn">import</span> <span class="n">parse_xyz_from_file</span>
         <span class="k">return</span> <span class="n">parse_xyz_from_file</span><span class="p">(</span><span class="n">xyz_str</span><span class="p">)</span>
     <span class="n">xyz_str</span> <span class="o">=</span> <span class="n">xyz_str</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz_str</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz_str</span><span class="o">.</span><span class="n">splitlines</span><span class="p">())</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">xyz_str</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="c1"># this is a zmat</span>
         <span class="k">return</span> <span class="n">zmat_to_xyz</span><span class="p">(</span><span class="n">zmat</span><span class="o">=</span><span class="n">str_to_zmat</span><span class="p">(</span><span class="n">xyz_str</span><span class="p">),</span> <span class="n">keep_dummy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">xyz_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;symbols&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="s1">&#39;isotopes&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(),</span> <span class="s1">&#39;coords&#39;</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">()}</span>
@@ -258,6 +270,8 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># this is a &quot;regular&quot; string xyz format, if it has isotope information it will be preserved</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">xyz_str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]:</span>
+                <span class="k">continue</span>
             <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">():</span>
                 <span class="n">splits</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
@@ -426,6 +440,52 @@
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]))</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">comment</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">xyz_to_str</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span></div>
 
 
+<div class="viewcode-block" id="xyz_to_turbomol_format"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.xyz_to_turbomol_format">[docs]</a><span class="k">def</span> <span class="nf">xyz_to_turbomol_format</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+                           <span class="n">charge</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                           <span class="n">unpaired</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                           <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the respective Turbomole coordinates format.</span>
+
+<span class="sd">$eht charge=0 unpaired=0</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xyz_dict (dict): The ARC xyz format.</span>
+<span class="sd">        charge (int, optional): The net charge.</span>
+<span class="sd">        unpaired (int, optional): The number of unpaired electrons.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The respective Turbomole coordinates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">xyz_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">xyz_dict</span> <span class="o">=</span> <span class="n">check_xyz_dict</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">)</span>
+    <span class="n">coords_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;$coord angs&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">coord</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">],</span> <span class="n">xyz_dict</span><span class="p">[</span><span class="s1">&#39;coords&#39;</span><span class="p">]):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{0:11.8f}{1:14.8f}{2:14.8f}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">coord</span><span class="p">)</span>
+        <span class="n">row</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;      </span><span class="si">{</span><span class="n">symbol</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">coords_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">charge</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">unpaired</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">coords_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;$eht charge=</span><span class="si">{</span><span class="n">charge</span><span class="si">}</span><span class="s1"> unpaired=</span><span class="si">{</span><span class="n">unpaired</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">coords_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;$end</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">coords_list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="xyz_to_coords_and_element_numbers"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.xyz_to_coords_and_element_numbers">[docs]</a><span class="k">def</span> <span class="nf">xyz_to_coords_and_element_numbers</span><span class="p">(</span><span class="n">xyz</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">,</span> <span class="nb">list</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert xyz to a coords list and an atomic number list.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        xyz (dict): The coordinates.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple[list, list]: Coords and atomic numbers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">xyz_to_coords_list</span><span class="p">(</span><span class="n">xyz</span><span class="p">)</span>
+    <span class="n">z_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">qcel</span><span class="o">.</span><span class="n">periodictable</span><span class="o">.</span><span class="n">to_Z</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">coords</span><span class="p">,</span> <span class="n">z_list</span></div>
+
+
 <div class="viewcode-block" id="xyz_to_kinbot_list"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.xyz_to_kinbot_list">[docs]</a><span class="k">def</span> <span class="nf">xyz_to_kinbot_list</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the KinBot xyz format of a single running list of:</span>
@@ -453,7 +513,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        Optional[np.array]: The distance matrix.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">xyz_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">xyz_dict</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">xyz_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
         <span class="k">return</span> <span class="kc">None</span>
     <span class="n">xyz_dict</span> <span class="o">=</span> <span class="n">check_xyz_dict</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">)</span>
     <span class="n">dmat</span> <span class="o">=</span> <span class="n">qcel</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">misc</span><span class="o">.</span><span class="n">distance_matrix</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">xyz_to_coords_list</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">)),</span>
@@ -543,6 +603,25 @@
         <span class="n">isotopes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">get_most_common_isotope_for_element</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span> <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="n">symbols</span><span class="p">)</span>
     <span class="n">xyz_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;symbols&#39;</span><span class="p">:</span> <span class="n">symbols</span><span class="p">,</span> <span class="s1">&#39;isotopes&#39;</span><span class="p">:</span> <span class="n">isotopes</span><span class="p">,</span> <span class="s1">&#39;coords&#39;</span><span class="p">:</span> <span class="n">coords</span><span class="p">}</span>
     <span class="k">return</span> <span class="n">xyz_dict</span></div>
+
+
+<div class="viewcode-block" id="species_to_sdf_file"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.species_to_sdf_file">[docs]</a><span class="k">def</span> <span class="nf">species_to_sdf_file</span><span class="p">(</span><span class="n">species</span><span class="p">:</span> <span class="s1">&#39;ARCSpecies&#39;</span><span class="p">,</span>
+                        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                        <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write an SDF file with coordinates and connectivity information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        species (ARCSpecies): The ARCSpecies object instance.</span>
+<span class="sd">        path (str): The full path to the .sdf file that will be saved.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">species</span><span class="o">.</span><span class="n">mol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">species</span><span class="o">.</span><span class="n">mol_from_xyz</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">species</span><span class="o">.</span><span class="n">mol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rdkit_mol</span> <span class="o">=</span> <span class="n">rdkit_conf_from_mol</span><span class="p">(</span><span class="n">species</span><span class="o">.</span><span class="n">mol</span><span class="p">,</span> <span class="n">species</span><span class="o">.</span><span class="n">get_xyz</span><span class="p">())[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">SDWriter</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">rdkit_mol</span><span class="p">)</span>
+        <span class="n">w</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="sort_xyz_using_indices"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.sort_xyz_using_indices">[docs]</a><span class="k">def</span> <span class="nf">sort_xyz_using_indices</span><span class="p">(</span><span class="n">xyz_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
@@ -655,6 +734,22 @@
 <span class="sd">        List[float]: The corresponding list of mass in amu.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">get_element_mass</span><span class="p">(</span><span class="n">symbol</span><span class="p">,</span> <span class="n">isotope</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">isotope</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;symbols&#39;</span><span class="p">],</span> <span class="n">xyz</span><span class="p">[</span><span class="s1">&#39;isotopes&#39;</span><span class="p">])]</span></div>
+
+
+<div class="viewcode-block" id="hartree_to_si"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.hartree_to_si">[docs]</a><span class="k">def</span> <span class="nf">hartree_to_si</span><span class="p">(</span><span class="n">e</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                  <span class="n">kilo</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                  <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert Hartree units into J/mol or into kJ/mol.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        e (float): Energy in Hartree.</span>
+<span class="sd">        kilo (bool, optional): Whether to return kJ/mol units. ``True`` by default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Expected a float, got </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1"> which is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+    <span class="n">factor</span> <span class="o">=</span> <span class="mf">0.001</span> <span class="k">if</span> <span class="n">kilo</span> <span class="k">else</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">e</span> <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">E_h</span> <span class="o">*</span> <span class="n">constants</span><span class="o">.</span><span class="n">Na</span> <span class="o">*</span> <span class="n">factor</span></div>
 
 
 <div class="viewcode-block" id="rmg_conformer_to_xyz"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.rmg_conformer_to_xyz">[docs]</a><span class="k">def</span> <span class="nf">rmg_conformer_to_xyz</span><span class="p">(</span><span class="n">conformer</span><span class="p">):</span>
@@ -924,7 +1019,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        zmat (dict): The Z Matrix to convert.</span>
 <span class="sd">        zmat_format (str, optional): The requested format to output (varies by ESS).</span>
-<span class="sd">                                     Allowed values are: &#39;gaussian&#39;, &#39;qchem&#39;, &#39;molpro&#39;, &#39;orca&#39;, or &#39;psi4&#39;.</span>
+<span class="sd">                                     Allowed values are: &#39;gaussian&#39;, &#39;qchem&#39;, &#39;molpro&#39;, &#39;orca&#39;, &#39;cfour&#39;, or &#39;psi4&#39;.</span>
 <span class="sd">                                     The default format is &#39;gaussian&#39;.</span>
 <span class="sd">        consolidate (bool): Whether to return a consolidated zmat (geometry optimization will be more efficient).</span>
 
@@ -941,8 +1036,9 @@
                              <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">zmat</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">zmat_format</span> <span class="o">==</span> <span class="s1">&#39;terachem&#39;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ConverterError</span><span class="p">(</span><span class="s1">&#39;TeraChem does not accept a zmat as input (it has its own internal conversions).&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">zmat_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;qchem&#39;</span><span class="p">,</span> <span class="s1">&#39;molpro&#39;</span><span class="p">,</span> <span class="s1">&#39;orca&#39;</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="n">ConverterError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;zmat_format must be either gaussian, qchem, molpro, orca, or psi4, got: </span><span class="si">{</span><span class="n">zmat_format</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">zmat_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;qchem&#39;</span><span class="p">,</span> <span class="s1">&#39;molpro&#39;</span><span class="p">,</span> <span class="s1">&#39;orca&#39;</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;cfour&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">ConverterError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;zmat_format must be either gaussian, qchem, molpro, orca, cfour, or psi4, &#39;</span>
+                             <span class="sa">f</span><span class="s1">&#39;got: </span><span class="si">{</span><span class="n">zmat_format</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">zmat_format</span> <span class="o">==</span> <span class="s1">&#39;orca&#39;</span><span class="p">:</span>
         <span class="c1"># replace dummy atom symbols</span>
         <span class="n">symbols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
@@ -955,7 +1051,7 @@
         <span class="c1"># parametarized internal coordinates are hence not supported</span>
         <span class="n">consolidate</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">separator</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span> <span class="k">if</span> <span class="n">zmat_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;molpro&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
-    <span class="n">var_separator</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span> <span class="k">if</span> <span class="n">zmat_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;molpro&#39;</span><span class="p">,</span> <span class="s1">&#39;qchem&#39;</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39; &#39;</span>
+    <span class="n">var_separator</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span> <span class="k">if</span> <span class="n">zmat_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;molpro&#39;</span><span class="p">,</span> <span class="s1">&#39;qchem&#39;</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;cfour&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="s1">&#39; &#39;</span>
     <span class="n">zmat_str</span><span class="p">,</span> <span class="n">variables_str</span><span class="p">,</span> <span class="n">variables</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">()</span>
     <span class="n">type_indices</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;R&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>  <span class="c1"># consolidation counters</span>
     <span class="n">variables_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># keys are coord (e.g., &#39;R_2|4_0|0&#39;), values are vars (e.g., &#39;R1&#39;)</span>
@@ -997,7 +1093,7 @@
     <span class="k">if</span> <span class="n">zmat_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;gaussian&#39;</span><span class="p">]:</span>
         <span class="n">variables_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">variables</span><span class="p">))</span>
         <span class="n">result</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">zmat_str</span><span class="si">}</span><span class="s1">Variables:</span><span class="se">\n</span><span class="si">{</span><span class="n">variables_str</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="n">consolidate</span> <span class="k">else</span> <span class="n">zmat_str</span>
-    <span class="k">elif</span> <span class="n">zmat_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;qchem&#39;</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;orca&#39;</span><span class="p">]:</span>
+    <span class="k">elif</span> <span class="n">zmat_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;qchem&#39;</span><span class="p">,</span> <span class="s1">&#39;psi4&#39;</span><span class="p">,</span> <span class="s1">&#39;orca&#39;</span><span class="p">,</span> <span class="s1">&#39;cfour&#39;</span><span class="p">]:</span>
         <span class="n">variables_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">variables</span><span class="p">))</span>
         <span class="n">result</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">zmat_str</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">variables_str</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">if</span> <span class="n">consolidate</span> <span class="k">else</span> <span class="n">zmat_str</span>
     <span class="k">elif</span> <span class="n">zmat_format</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;molpro&#39;</span><span class="p">]:</span>
@@ -1612,7 +1708,7 @@
         <span class="n">atom</span><span class="o">.</span><span class="n">radical_electrons</span> <span class="o">=</span> <span class="n">radical_map</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">radical_electrons</span></div>
 
 
-<div class="viewcode-block" id="order_atoms_in_mol_list"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.order_atoms_in_mol_list">[docs]</a><span class="k">def</span> <span class="nf">order_atoms_in_mol_list</span><span class="p">(</span><span class="n">ref_mol</span><span class="p">,</span> <span class="n">mol_list</span><span class="p">):</span>
+<div class="viewcode-block" id="order_atoms_in_mol_list"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.order_atoms_in_mol_list">[docs]</a><span class="k">def</span> <span class="nf">order_atoms_in_mol_list</span><span class="p">(</span><span class="n">ref_mol</span><span class="p">,</span> <span class="n">mol_list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Order the atoms in all molecules of ``mol_list`` by the atom order in ``ref_mol``.</span>
 
@@ -1620,12 +1716,11 @@
 <span class="sd">        ref_mol (Molecule): The reference Molecule object.</span>
 <span class="sd">        mol_list (list): Entries are Molecule objects whose atoms will be reordered according to the reference.</span>
 
+<span class="sd">    Raises:</span>
+<span class="sd">        TypeError: If ``ref_mol`` or the entries in ``mol_list`` have a wrong type.</span>
+
 <span class="sd">    Returns:</span>
 <span class="sd">        bool: Whether the reordering was successful, ``True`` if it was.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        SanitizationError: If atoms could not be re-ordered.</span>
-<span class="sd">        TypeError: If ``ref_mol`` or the entries in ``mol_list`` have a wrong type.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_mol</span><span class="p">,</span> <span class="n">Molecule</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;expected mol to be a Molecule instance, got </span><span class="si">{</span><span class="n">ref_mol</span><span class="si">}</span><span class="s1"> which is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">ref_mol</span><span class="p">)</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
@@ -1916,20 +2011,8 @@
     <span class="n">spc2</span> <span class="o">=</span> <span class="n">Species</span><span class="p">(</span><span class="n">molecule</span><span class="o">=</span><span class="p">[</span><span class="n">mol2_copy</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">convert_to_single_bonds</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">spc1</span><span class="o">.</span><span class="n">generate_resonance_structures</span><span class="p">(</span><span class="n">keep_isomorphic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                               <span class="n">filter_structures</span><span class="o">=</span><span class="n">filter_structures</span><span class="p">,</span>
-                                               <span class="n">save_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                               <span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="n">AtomTypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="k">pass</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">spc2</span><span class="o">.</span><span class="n">generate_resonance_structures</span><span class="p">(</span><span class="n">keep_isomorphic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                                               <span class="n">filter_structures</span><span class="o">=</span><span class="n">filter_structures</span><span class="p">,</span>
-                                               <span class="n">save_order</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                               <span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="n">AtomTypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
-            <span class="k">pass</span>
+        <span class="n">generate_resonance_structures</span><span class="p">(</span><span class="n">spc1</span><span class="p">,</span> <span class="n">filter_structures</span><span class="o">=</span><span class="n">filter_structures</span><span class="p">)</span>
+        <span class="n">generate_resonance_structures</span><span class="p">(</span><span class="n">spc2</span><span class="p">,</span> <span class="n">filter_structures</span><span class="o">=</span><span class="n">filter_structures</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">molecule1</span> <span class="ow">in</span> <span class="n">spc1</span><span class="o">.</span><span class="n">molecule</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">molecule2</span> <span class="ow">in</span> <span class="n">spc2</span><span class="o">.</span><span class="n">molecule</span><span class="p">:</span>
@@ -2054,8 +2137,8 @@
 
 <div class="viewcode-block" id="compare_confs"><a class="viewcode-back" href="../../../api/converter.html#arc.species.converter.compare_confs">[docs]</a><span class="k">def</span> <span class="nf">compare_confs</span><span class="p">(</span><span class="n">xyz1</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
                   <span class="n">xyz2</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-                  <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
-                  <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-5</span><span class="p">,</span>
+                  <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.01</span><span class="p">,</span>
+                  <span class="n">atol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
                   <span class="n">rmsd_score</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                   <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -2080,7 +2163,7 @@
     <span class="n">xyz1</span><span class="p">,</span> <span class="n">xyz2</span> <span class="o">=</span> <span class="n">check_xyz_dict</span><span class="p">(</span><span class="n">xyz1</span><span class="p">),</span> <span class="n">check_xyz_dict</span><span class="p">(</span><span class="n">xyz2</span><span class="p">)</span>
     <span class="n">dmat1</span><span class="p">,</span> <span class="n">dmat2</span> <span class="o">=</span> <span class="n">xyz_to_dmat</span><span class="p">(</span><span class="n">xyz1</span><span class="p">),</span> <span class="n">xyz_to_dmat</span><span class="p">(</span><span class="n">xyz2</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">rmsd_score</span><span class="p">:</span>
-        <span class="c1"># distance matrix is symmetric, only need the upper triangular part to compute rmsd</span>
+        <span class="c1"># Distance matrix is symmetric, only need the upper triangular part to compute rmsd.</span>
         <span class="n">rmsd</span> <span class="o">=</span> <span class="n">calc_rmsd</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">dmat1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">dmat2</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">rmsd</span>
     <span class="k">else</span><span class="p">:</span>
