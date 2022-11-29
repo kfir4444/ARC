@@ -383,19 +383,26 @@
 
 
 <div class="viewcode-block" id="submit_job"><a class="viewcode-back" href="../../../api/local.html#arc.job.local.submit_job">[docs]</a><span class="k">def</span> <span class="nf">submit_job</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+               <span class="n">cluster_soft</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">submit_cmd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">submit_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Submit a job.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        path (str): The job&#39;s folder path, where the submit script is located (just the folder path, w/o the filename).</span>
+<span class="sd">        cluster_soft (str, optional): The server cluster software.</span>
+<span class="sd">        submit_cmd (str, optional): The submit command.</span>
+<span class="sd">        submit_filename (str, optional): The submit script file name.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Tuple[Optional[str], Optional[str]]: job_status, job_id</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">job_status</span><span class="p">,</span> <span class="n">job_id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span>
-    <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cd </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">submit_command</span><span class="p">[</span><span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]]</span><span class="si">}</span><span class="s2"> &quot;</span> \
-          <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">submit_filenames</span><span class="p">[</span><span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]]</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">submit_cmd</span> <span class="o">=</span> <span class="n">submit_cmd</span> <span class="ow">or</span> <span class="n">submit_command</span><span class="p">[</span><span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]]</span>
+    <span class="n">submit_filename</span> <span class="o">=</span> <span class="n">submit_filename</span> <span class="ow">or</span> <span class="n">submit_filenames</span><span class="p">[</span><span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]]</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cd </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">submit_cmd</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">submit_filename</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">execute_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdout</span><span class="p">):</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
@@ -406,7 +413,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Got the following error when trying to submit job:</span><span class="se">\n</span><span class="si">{</span><span class="n">stderr</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
         <span class="n">job_status</span> <span class="o">=</span> <span class="s1">&#39;errored&#39;</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">job_id</span> <span class="o">=</span> <span class="n">_determine_job_id</span><span class="p">(</span><span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">)</span>
+        <span class="n">job_id</span> <span class="o">=</span> <span class="n">_determine_job_id</span><span class="p">(</span><span class="n">stdout</span><span class="o">=</span><span class="n">stdout</span><span class="p">,</span> <span class="n">cluster_soft</span><span class="o">=</span><span class="n">cluster_soft</span><span class="p">)</span>
     <span class="n">job_status</span> <span class="o">=</span> <span class="s1">&#39;running&#39;</span> <span class="k">if</span> <span class="n">job_id</span> <span class="k">else</span> <span class="n">job_status</span>
     <span class="k">return</span> <span class="n">job_status</span><span class="p">,</span> <span class="n">job_id</span></div>
 
@@ -419,6 +426,10 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        stdout (List[str]): The stdout got from submitting a job.</span>
+<span class="sd">        cluster_soft (str, optional): The server cluster software.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: The determined job ID.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">job_id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
     <span class="n">cluster_soft</span> <span class="o">=</span> <span class="n">cluster_soft</span> <span class="ow">or</span> <span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
@@ -512,7 +523,7 @@
 <span class="sd">        mode (str): The mode change to be applied, can be either octal or symbolic.</span>
 <span class="sd">        file_name (str): The path to the file or the directory to be changed.</span>
 <span class="sd">        recursive (bool, optional): Whether to recursively change the mode to all files</span>
-<span class="sd">                                    under a directory.``True`` for recursively change.</span>
+<span class="sd">                                    under a directory. ``True`` for recursively change.</span>
 <span class="sd">        path (str, optional): The directory path at which the command will be executed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>

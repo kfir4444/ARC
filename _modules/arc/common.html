@@ -182,6 +182,7 @@
 <span class="kn">import</span> <span class="nn">time</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
@@ -1785,7 +1786,7 @@
             <span class="k">break</span></div>
 
 
-<div class="viewcode-block" id="sort_atoms_in_decending_label_order"><a class="viewcode-back" href="../../api/common.html#arc.common.sort_atoms_in_decending_label_order">[docs]</a><span class="k">def</span> <span class="nf">sort_atoms_in_decending_label_order</span><span class="p">(</span><span class="n">mol</span><span class="p">:</span> <span class="s1">&#39;Molecule&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<div class="viewcode-block" id="sort_atoms_in_descending_label_order"><a class="viewcode-back" href="../../api/common.html#arc.common.sort_atoms_in_descending_label_order">[docs]</a><span class="k">def</span> <span class="nf">sort_atoms_in_descending_label_order</span><span class="p">(</span><span class="n">mol</span><span class="p">:</span> <span class="s1">&#39;Molecule&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A helper function, helpful in the context of atom mapping.</span>
 <span class="sd">    This function reassign the .atoms in Molecule with a list of atoms</span>
@@ -1796,7 +1797,38 @@
 <span class="sd">    Args:</span>
 <span class="sd">        mol (Molecule): An RMG Molecule object, with labeled atoms</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="p">))</span></div>
+    <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">label</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="dfs"><a class="viewcode-back" href="../../api/common.html#arc.common.dfs">[docs]</a><span class="k">def</span> <span class="nf">dfs</span><span class="p">(</span><span class="n">mol</span><span class="p">:</span> <span class="n">Molecule</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">sort_result</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A depth-first search algorithm for graph traversal of a Molecule object instance.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mol (Molecule): The Molecule to search.</span>
+<span class="sd">        start (int): The index of the first atom in the search.</span>
+<span class="sd">        sort_result (bool, optional): Whether to sort the returned visited indices.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List[int]: Indices of all atoms connected to the starting atom.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Got a wrong start number </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s1"> for a molecule with only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">)</span><span class="si">}</span><span class="s1"> atoms.&#39;</span><span class="p">)</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="n">deque</span><span class="p">()</span>
+    <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">stack</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">visited</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">visited</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">edges</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mol</span><span class="o">.</span><span class="n">atoms</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">atom</span><span class="p">))</span>
+    <span class="n">visited</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">visited</span><span class="p">)</span> <span class="k">if</span> <span class="n">sort_result</span> <span class="k">else</span> <span class="n">visited</span>
+    <span class="k">return</span> <span class="n">visited</span></div>
 </pre></div>
 
            </div>

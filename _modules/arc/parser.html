@@ -178,7 +178,7 @@
 <span class="kn">from</span> <span class="nn">arkane.exceptions</span> <span class="kn">import</span> <span class="n">LogError</span>
 <span class="kn">from</span> <span class="nn">arkane.ess</span> <span class="kn">import</span> <span class="n">ess_factory</span><span class="p">,</span> <span class="n">GaussianLog</span><span class="p">,</span> <span class="n">MolproLog</span><span class="p">,</span> <span class="n">OrcaLog</span><span class="p">,</span> <span class="n">QChemLog</span><span class="p">,</span> <span class="n">TeraChemLog</span>
 
-<span class="kn">from</span> <span class="nn">arc.common</span> <span class="kn">import</span> <span class="n">determine_ess</span><span class="p">,</span> <span class="n">get_close_tuple</span><span class="p">,</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">is_same_pivot</span><span class="p">,</span> <span class="n">read_yaml_file</span>
+<span class="kn">from</span> <span class="nn">arc.common</span> <span class="kn">import</span> <span class="n">determine_ess</span><span class="p">,</span> <span class="n">get_close_tuple</span><span class="p">,</span> <span class="n">get_logger</span><span class="p">,</span> <span class="n">is_same_pivot</span><span class="p">,</span> <span class="n">is_str_float</span><span class="p">,</span> <span class="n">read_yaml_file</span>
 <span class="kn">from</span> <span class="nn">arc.exceptions</span> <span class="kn">import</span> <span class="n">InputError</span><span class="p">,</span> <span class="n">ParserError</span>
 <span class="kn">from</span> <span class="nn">arc.species.converter</span> <span class="kn">import</span> <span class="n">hartree_to_si</span><span class="p">,</span> <span class="n">str_to_xyz</span><span class="p">,</span> <span class="n">xyz_from_data</span>
 
@@ -291,7 +291,19 @@
                     <span class="k">break</span>
             <span class="k">if</span> <span class="s1">&#39;vibrational frequencies&#39;</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
                 <span class="n">read_output</span> <span class="o">=</span> <span class="kc">True</span>
-
+        <span class="k">if</span> <span class="n">freqs</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Could not read freqs from output.out, try reading from vibspectrum</span>
+            <span class="n">vibspectrum_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="s1">&#39;vibspectrum&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">vibspectrum_path</span><span class="p">):</span>
+                <span class="n">lines</span> <span class="o">=</span> <span class="n">_get_lines_from_file</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">vibspectrum_path</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s1">&#39;$&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span> <span class="ow">and</span> <span class="s1">&#39;#&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                        <span class="n">splits</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">splits</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+                            <span class="k">continue</span>
+                        <span class="n">freq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span> <span class="k">if</span> <span class="n">is_str_float</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">])</span> <span class="k">else</span> <span class="mi">0</span>
+                        <span class="k">if</span> <span class="n">freq</span><span class="p">:</span>
+                            <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">freqs</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">ParserError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;parse_frequencies() can currently only parse Gaussian, Molpro, Orca, QChem, TeraChem and xTB &#39;</span>
                           <span class="sa">f</span><span class="s1">&#39;files, got </span><span class="si">{</span><span class="n">software</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>

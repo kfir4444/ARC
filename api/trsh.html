@@ -194,7 +194,7 @@
 <p>The ARC troubleshooting (“trsh”) module</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="arc.job.trsh.determine_ess_status">
-<span class="sig-prename descclassname"><span class="pre">arc.job.trsh.</span></span><span class="sig-name descname"><span class="pre">determine_ess_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">software</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arc/job/trsh.html#determine_ess_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.job.trsh.determine_ess_status" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">arc.job.trsh.</span></span><span class="sig-name descname"><span class="pre">determine_ess_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">species_label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">software</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/arc/job/trsh.html#determine_ess_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.job.trsh.determine_ess_status" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the reason that caused an ESS job to crash, assign error keywords for troubleshooting.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -202,13 +202,33 @@
 <li><p><strong>output_path</strong> (<em>str</em>) – The path to the ESS output file.</p></li>
 <li><p><strong>species_label</strong> (<em>str</em>) – The species label.</p></li>
 <li><p><strong>job_type</strong> (<em>str</em>) – The job type (e.g., ‘opt, ‘freq’, ‘ts’, ‘sp’).</p></li>
+<li><p><strong>job_log</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the server job log file (not the ESS output file) or its content.</p></li>
 <li><p><strong>software</strong> (<em>str</em><em>, </em><em>optional</em>) – The ESS software.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="simple">
-<dt>Returns: Tuple[str, list, str, str]</dt><dd><ul class="simple">
+<dt>Returns: Tuple[str, List[str], str, str]</dt><dd><ul class="simple">
 <li><p>The status. Either ‘done’ or ‘errored’.</p></li>
+<li><p>The standardized error keywords.</p></li>
+<li><p>A description of the error.</p></li>
+<li><p>The parsed line from the ESS output file indicating the error.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="arc.job.trsh.determine_job_log_memory_issues">
+<span class="sig-prename descclassname"><span class="pre">arc.job.trsh.</span></span><span class="sig-name descname"><span class="pre">determine_job_log_memory_issues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">job_log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/arc/job/trsh.html#determine_job_log_memory_issues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.job.trsh.determine_job_log_memory_issues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the reason that caused an ESS job to crash, assign error keywords for troubleshooting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>job_log</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the server job log file (not the ESS output file) or its content.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>Returns: Tuple[List[str], str, str]</dt><dd><ul class="simple">
 <li><p>The standardized error keywords.</p></li>
 <li><p>A description of the error.</p></li>
 <li><p>The parsed line from the ESS output file indicating the error.</p></li>
