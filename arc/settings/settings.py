@@ -195,6 +195,11 @@ orca_default_options_dict = {
     'global': {'keyword': {'scf_convergence': 'TightSCF',
                            'dlpno_threshold': 'normalPNO'}},
 }
+tani_default_options_dict = {"model" : "ani2x",
+                             "device" : "cpu",
+                             "fmax" : 0.001,
+                             "engine" : "bfgs",
+                             "steps" : None}
 
 # xTB-GSM
 xtb_gsm_settings = {'sm_type': 'GSM',
