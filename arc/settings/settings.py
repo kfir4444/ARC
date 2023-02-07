@@ -262,8 +262,20 @@ default_job_settings = {
 LOWEST_MAJOR_TS_FREQ, HIGHEST_MAJOR_TS_FREQ = 75.0, 10000.0
 
 # default environment names for sister repos
-TS_GCN_PYTHON, AUTOTST_PYTHON, ARC_PYTHON, XTB = None, None, None, None
+TS_GCN_PYTHON, TANI_PYTHON, AUTOTST_PYTHON, ARC_PYTHON, XTB = None, None, None, None, None
 home = os.getenv("HOME") or os.path.expanduser("~")
+
+tani_pypath_1 = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable))),
+                            'tani', 'bin', 'python')
+tani_pypath_2 = os.path.join(home, 'mambaforge', 'envs', 'tani', 'bin', 'python')
+tani_pypath_3 = os.path.join(home, 'anaconda3', 'envs', 'tani', 'bin', 'python')
+tani_pypath_4 = os.path.join(home, 'miniconda3', 'envs', 'tani', 'bin', 'python')
+tani_pypath_5 = os.path.join(home, '.conda', 'envs', 'tani', 'bin', 'python')
+tani_pypath_6 = os.path.join('/Local/ce_dana', 'anaconda3', 'envs', 'tani', 'bin', 'python')
+for tani_pypath in [tani_pypath_1, tani_pypath_2, tani_pypath_3, tani_pypath_4, tani_pypath_5, tani_pypath_6]:
+    if os.path.isfile(tani_pypath):
+        TANI_PYTHON = tani_pypath
+        break
 
 gcn_pypath_1 = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(sys.executable))),
                             'ts_gcn', 'bin', 'python')
