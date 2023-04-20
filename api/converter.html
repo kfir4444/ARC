@@ -103,7 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="zmat.html">arc.species.zmat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reaction.html">arc.reaction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="scheduler.html">arc.scheduler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="job.html">arc.job.job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job.html">arc.job</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ssh.html">arc.job.ssh</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local.html">arc.job.local</a></li>
 <li class="toctree-l2"><a class="reference internal" href="trsh.html">arc.job.trsh</a></li>
@@ -720,6 +720,24 @@ If <cite>multiplicity</cite> is given, the returned species multiplicity will be
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="arc.species.converter.relocate_zmat_dummy_atoms_to_the_end">
+<span class="sig-prename descclassname"><span class="pre">arc.species.converter.</span></span><span class="sig-name descname"><span class="pre">relocate_zmat_dummy_atoms_to_the_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zmat_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/arc/species/converter.html#relocate_zmat_dummy_atoms_to_the_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.species.converter.relocate_zmat_dummy_atoms_to_the_end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Relocate all dummy atoms in a ZMat to the end of the corresponding Cartesian coordinates atom list.
+Only modifies the values of the ZMat map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>zmat_map</strong> (<em>dict</em>) – The ZMat map.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated ZMat map.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1497,7 +1515,7 @@ Must be ordered as the original mol/xyz used to create <code class="docutils lit
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2022, Alon Grinberg Dana
+        &copy; Copyright 2018-2023, Alon Grinberg Dana
 
     </p>
   </div>

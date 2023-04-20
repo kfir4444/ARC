@@ -1160,10 +1160,11 @@
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39; (default)&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Geometry optimization:</span><span class="si">{</span><span class="n">default_flag</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Not performing geometry optimization, since it was not requested by the user.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_types</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">freq_level</span><span class="p">:</span>
@@ -1175,10 +1176,11 @@
                         <span class="n">info</span> <span class="o">=</span> <span class="s1">&#39; (default)&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">info</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">freq_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_level</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Frequencies:</span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_level</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Not performing frequency calculation, since it was not requested by the user.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">freq_level</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">freq_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">freq_level</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_types</span><span class="p">[</span><span class="s1">&#39;sp&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_level</span><span class="p">:</span>
@@ -1186,10 +1188,11 @@
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39; (default)&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">sp_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sp_level</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Energy:</span><span class="si">{</span><span class="n">default_flag</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sp_level</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Not performing single point energy calculation, since it was not requested by the user.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sp_level</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sp_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sp_level</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_types</span><span class="p">[</span><span class="s1">&#39;rotors&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_level</span><span class="p">:</span>
@@ -1201,13 +1204,14 @@
                         <span class="n">info</span> <span class="o">=</span> <span class="s1">&#39; (default)&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">info</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">scan_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_level</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rotor scans:</span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_level</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Not performing rotor scans, since it was not requested by the user. This might &quot;</span>
                                <span class="s2">&quot;compromise finding the best conformer, as dihedral angles won&#39;t be corrected. &quot;</span>
                                <span class="s2">&quot;Also, the calculated thermodynamic properties and rate coefficients &quot;</span>
                                <span class="s2">&quot;will be less accurate.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scan_level</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scan_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scan_level</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_types</span><span class="p">[</span><span class="s1">&#39;irc&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">irc_level</span><span class="p">:</span>
@@ -1215,10 +1219,11 @@
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39; (default)&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">irc_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">irc_level</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;IRC:</span><span class="si">{</span><span class="n">default_flag</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">irc_level</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Not running IRC computations, since it was not requested by the user.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">irc_level</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">irc_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">irc_level</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_types</span><span class="p">[</span><span class="s1">&#39;orbitals&#39;</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">orbitals_level</span><span class="p">:</span>
@@ -1226,10 +1231,11 @@
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39; (default)&#39;</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">default_flag</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">orbitals_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orbitals_level</span><span class="p">)</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Orbitals:</span><span class="si">{</span><span class="n">default_flag</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">orbitals_level</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Not running molecular orbitals visualization, since it was not requested by the user.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">orbitals_level</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">orbitals_level</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">orbitals_level</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_types</span><span class="p">[</span><span class="s1">&#39;fine&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">opt_level</span><span class="o">.</span><span class="n">method_type</span> <span class="o">==</span> <span class="s1">&#39;dft&#39;</span>
                                            <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">composite_method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
@@ -1264,6 +1270,7 @@
             <span class="k">if</span> <span class="s1">&#39;//&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_of_theory</span><span class="p">:</span>
                 <span class="n">sp</span><span class="p">,</span> <span class="n">opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_of_theory</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;//&#39;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">level_of_theory</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">level_of_theory</span><span class="p">)</span>
                 <span class="n">sp</span> <span class="o">=</span> <span class="n">opt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level_of_theory</span>
             <span class="n">sp</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="n">sp</span><span class="p">)</span>
             <span class="n">opt</span> <span class="o">=</span> <span class="n">Level</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
@@ -1380,7 +1387,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2022, Alon Grinberg Dana
+        &copy; Copyright 2018-2023, Alon Grinberg Dana
 
     </p>
   </div>

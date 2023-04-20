@@ -386,6 +386,7 @@
                <span class="n">cluster_soft</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">submit_cmd</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">submit_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+               <span class="n">recursion</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Submit a job.</span>
@@ -395,19 +396,42 @@
 <span class="sd">        cluster_soft (str, optional): The server cluster software.</span>
 <span class="sd">        submit_cmd (str, optional): The submit command.</span>
 <span class="sd">        submit_filename (str, optional): The submit script file name.</span>
+<span class="sd">        recursion (bool, optional): Whether this call is within a recursion.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Tuple[Optional[str], Optional[str]]: job_status, job_id</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cluster_soft</span> <span class="o">=</span> <span class="n">cluster_soft</span> <span class="ow">or</span> <span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]</span>
     <span class="n">job_status</span><span class="p">,</span> <span class="n">job_id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span>
-    <span class="n">submit_cmd</span> <span class="o">=</span> <span class="n">submit_cmd</span> <span class="ow">or</span> <span class="n">submit_command</span><span class="p">[</span><span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]]</span>
-    <span class="n">submit_filename</span> <span class="o">=</span> <span class="n">submit_filename</span> <span class="ow">or</span> <span class="n">submit_filenames</span><span class="p">[</span><span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]]</span>
+    <span class="n">submit_cmd</span> <span class="o">=</span> <span class="n">submit_cmd</span> <span class="ow">or</span> <span class="n">submit_command</span><span class="p">[</span><span class="n">cluster_soft</span><span class="p">]</span>
+    <span class="n">submit_filename</span> <span class="o">=</span> <span class="n">submit_filename</span> <span class="ow">or</span> <span class="n">submit_filenames</span><span class="p">[</span><span class="n">cluster_soft</span><span class="p">]</span>
     <span class="n">cmd</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cd </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">; </span><span class="si">{</span><span class="n">submit_cmd</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">submit_filename</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">execute_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdout</span><span class="p">):</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
         <span class="n">stdout</span><span class="p">,</span> <span class="n">stderr</span> <span class="o">=</span> <span class="n">execute_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdout</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">stderr</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cluster_soft</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;slurm&#39;</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;AssocMaxSubmitJobLimit&#39;</span> <span class="ow">in</span> <span class="n">err_line</span> <span class="k">for</span> <span class="n">err_line</span> <span class="ow">in</span> <span class="n">stderr</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Max number of submitted jobs was reached, sleeping...&#39;</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="n">submit_job</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                       <span class="n">cluster_soft</span><span class="o">=</span><span class="n">cluster_soft</span><span class="p">,</span>
+                       <span class="n">submit_cmd</span><span class="o">=</span><span class="n">submit_cmd</span><span class="p">,</span>
+                       <span class="n">submit_filename</span><span class="o">=</span><span class="n">submit_filename</span><span class="p">,</span>
+                       <span class="n">recursion</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="p">)</span>
+        <span class="k">if</span> <span class="n">cluster_soft</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;pbs&#39;</span> <span class="ow">and</span>  <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;qsub: would exceed&#39;</span> <span class="ow">in</span> <span class="n">err_line</span> <span class="k">for</span> <span class="n">err_line</span> <span class="ow">in</span> <span class="n">stderr</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Max number of submitted jobs was reached, sleeping...&#39;</span><span class="p">)</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span>
+            <span class="n">submit_job</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">,</span>
+                       <span class="n">cluster_soft</span><span class="o">=</span><span class="n">cluster_soft</span><span class="p">,</span>
+                       <span class="n">submit_cmd</span><span class="o">=</span><span class="n">submit_cmd</span><span class="p">,</span>
+                       <span class="n">submit_filename</span><span class="o">=</span><span class="n">submit_filename</span><span class="p">,</span>
+                       <span class="n">recursion</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                       <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cluster_soft</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;pbs&#39;</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span><span class="s1">&#39;qsub: Illegal attribute or resource value&#39;</span> <span class="ow">in</span> <span class="n">err_line</span> <span class="k">for</span> <span class="n">err_line</span> <span class="ow">in</span> <span class="n">stderr</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Got the following error when trying to submit job:</span><span class="se">\n</span><span class="si">{</span><span class="n">stderr</span><span class="si">}</span><span class="s1">. Please check your submit script&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span> <span class="ow">or</span> <span class="n">recursion</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stderr</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">stdout</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Got the following error when trying to submit job:</span><span class="se">\n</span><span class="si">{</span><span class="n">stderr</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
@@ -432,7 +456,8 @@
 <span class="sd">        str: The determined job ID.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">job_id</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="n">cluster_soft</span> <span class="o">=</span> <span class="n">cluster_soft</span> <span class="ow">or</span> <span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">cluster_soft</span> <span class="o">=</span> <span class="n">cluster_soft</span> <span class="ow">or</span> <span class="n">servers</span><span class="p">[</span><span class="s1">&#39;local&#39;</span><span class="p">][</span><span class="s1">&#39;cluster_soft&#39;</span><span class="p">]</span>
+    <span class="n">cluster_soft</span> <span class="o">=</span> <span class="n">cluster_soft</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">if</span> <span class="n">cluster_soft</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">cluster_soft</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;oge&#39;</span><span class="p">,</span> <span class="s1">&#39;sge&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="s1">&#39;submitted&#39;</span> <span class="ow">in</span> <span class="n">stdout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
         <span class="n">job_id</span> <span class="o">=</span> <span class="n">stdout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span>
     <span class="k">elif</span> <span class="n">cluster_soft</span> <span class="o">==</span> <span class="s1">&#39;slurm&#39;</span> <span class="ow">and</span> <span class="s1">&#39;submitted&#39;</span> <span class="ow">in</span> <span class="n">stdout</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
@@ -583,7 +608,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2022, Alon Grinberg Dana
+        &copy; Copyright 2018-2023, Alon Grinberg Dana
 
     </p>
   </div>

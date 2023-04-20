@@ -397,6 +397,8 @@
         <span class="n">content</span> <span class="o">=</span> <span class="n">read_yaml_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;xyz&#39;</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">content</span><span class="p">[</span><span class="s1">&#39;xyz&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;opt_xyz&#39;</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">content</span><span class="p">[</span><span class="s1">&#39;opt_xyz&#39;</span><span class="p">]</span>
     <span class="n">software</span> <span class="o">=</span> <span class="n">identify_ess</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
     <span class="n">xyz_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
     <span class="k">if</span> <span class="n">software</span> <span class="o">==</span> <span class="s1">&#39;xtb&#39;</span><span class="p">:</span>
@@ -639,17 +641,21 @@
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;Normal termination of Gaussian&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;Error termination via&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
             <span class="n">done</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">elif</span> <span class="s1">&#39;Optimization completed&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
-            <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;Input orientation:&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">+</span> <span class="mi">10</span> <span class="ow">and</span> <span class="s1">&#39;Input orientation:&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">or</span> <span class="s1">&#39;Forces (Hartrees/Bohr)&#39;</span> <span class="ow">in</span> <span class="n">lines</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">7</span><span class="p">]:</span>
                 <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">if</span> <span class="s1">&#39;Error termination via&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
                     <span class="k">return</span> <span class="n">traj</span>
             <span class="n">i</span> <span class="o">+=</span> <span class="mi">5</span>
-            <span class="n">xyz_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">xyz_str</span><span class="p">,</span> <span class="n">skip_traj</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="kc">False</span>
             <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;--------------------------------------------&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="s1">&#39;DIIS: error&#39;</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">skip_traj</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">break</span>
                 <span class="n">splits</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
                 <span class="n">xyz_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">qcel</span><span class="o">.</span><span class="n">periodictable</span><span class="o">.</span><span class="n">to_E</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">splits</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span><span class="si">}</span><span class="s1">  </span><span class="si">{</span><span class="n">splits</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="si">}</span><span class="s1">  </span><span class="si">{</span><span class="n">splits</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="si">}</span><span class="s1">  </span><span class="si">{</span><span class="n">splits</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span>
                 <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">traj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_to_xyz</span><span class="p">(</span><span class="n">xyz_str</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip_traj</span><span class="p">:</span>
+                <span class="n">traj</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_to_xyz</span><span class="p">(</span><span class="n">xyz_str</span><span class="p">))</span>
         <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="k">return</span> <span class="n">traj</span></div>
 
@@ -842,6 +848,7 @@
 <span class="sd">    - .xyz: XYZ file</span>
 <span class="sd">    - .gjf: Gaussian input file</span>
 <span class="sd">    - .out or .log: ESS output file (Gaussian, Molpro, Orca, QChem, TeraChem) - calls parse_geometry()</span>
+<span class="sd">    - .yml or .yaml files</span>
 <span class="sd">    - other: Molpro or QChem input file</span>
 
 <span class="sd">    Args:</span>
@@ -890,6 +897,14 @@
                     <span class="n">start_parsing</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">elif</span> <span class="s1">&#39;out&#39;</span> <span class="ow">in</span> <span class="n">file_extension</span> <span class="ow">or</span> <span class="s1">&#39;log&#39;</span> <span class="ow">in</span> <span class="n">file_extension</span><span class="p">:</span>
         <span class="n">xyz</span> <span class="o">=</span> <span class="n">parse_geometry</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s2">&quot;yml&quot;</span> <span class="ow">in</span> <span class="n">file_extension</span> <span class="ow">or</span> <span class="s1">&#39;yaml&#39;</span> <span class="ow">in</span> <span class="n">file_extension</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">read_yaml_file</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s2">&quot;xyz&quot;</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;xyz&quot;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s2">&quot;opt_xyz&quot;</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;opt_xyz&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">xyz</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">xyz</span> <span class="o">=</span> <span class="n">str_to_xyz</span><span class="p">(</span><span class="n">xyz</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">record</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
@@ -1412,7 +1427,7 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2022, Alon Grinberg Dana
+        &copy; Copyright 2018-2023, Alon Grinberg Dana
 
     </p>
   </div>

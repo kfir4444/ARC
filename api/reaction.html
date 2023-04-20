@@ -103,7 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="zmat.html">arc.species.zmat</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">arc.reaction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="scheduler.html">arc.scheduler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="job.html">arc.job.job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job.html">arc.job</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ssh.html">arc.job.ssh</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local.html">arc.job.local</a></li>
 <li class="toctree-l2"><a class="reference internal" href="trsh.html">arc.job.trsh</a></li>
@@ -618,7 +618,7 @@ Each entry is a list of tuples, each represents a bond and contains sorted atom 
 <dd><p>Get the mass of all elements of a reaction. Uses the atom order of the reactants.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The RMS of the normal mode displacements.</p>
+<dd class="field-odd"><p>The masses of all elements in the reactants.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>List[float]</p>
@@ -677,12 +677,15 @@ Default: <code class="docutils literal notranslate"><span class="pre">'str'</spa
 
 <dl class="py method">
 <dt class="sig sig-object py" id="arc.reaction.ARCReaction.get_reactants_and_products">
-<span class="sig-name descname"><span class="pre">get_reactants_and_products</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="species.html#arc.species.species.ARCSpecies" title="arc.species.species.ARCSpecies"><span class="pre">ARCSpecies</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Species</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="species.html#arc.species.species.ARCSpecies" title="arc.species.species.ARCSpecies"><span class="pre">ARCSpecies</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Species</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/arc/reaction.html#ARCReaction.get_reactants_and_products"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.reaction.ARCReaction.get_reactants_and_products" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_reactants_and_products</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_copies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="species.html#arc.species.species.ARCSpecies" title="arc.species.species.ARCSpecies"><span class="pre">ARCSpecies</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Species</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="species.html#arc.species.species.ARCSpecies" title="arc.species.species.ARCSpecies"><span class="pre">ARCSpecies</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Species</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/arc/reaction.html#ARCReaction.get_reactants_and_products"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.reaction.ARCReaction.get_reactants_and_products" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of reactant and product species including duplicate species, if any.
 The species could either be <code class="docutils literal notranslate"><span class="pre">ARCSpecies</span></code> or <code class="docutils literal notranslate"><span class="pre">RMGSpecies</span></code> object instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>arc</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return the species as ARCSpecies (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or as RMG Species (<code class="docutils literal notranslate"><span class="pre">False</span></code>).</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arc</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return the species as ARCSpecies (<code class="docutils literal notranslate"><span class="pre">True</span></code>) or as RMG Species (<code class="docutils literal notranslate"><span class="pre">False</span></code>).</p></li>
+<li><p><strong>return_copies</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to return unique object instances using the copy() method.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The reactants and products.</p>
@@ -851,7 +854,7 @@ Used when assigning r_species and p_species.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2022, Alon Grinberg Dana
+        &copy; Copyright 2018-2023, Alon Grinberg Dana
 
     </p>
   </div>

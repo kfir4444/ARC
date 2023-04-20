@@ -103,7 +103,7 @@
 <li class="toctree-l2"><a class="reference internal" href="zmat.html">arc.species.zmat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="reaction.html">arc.reaction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="scheduler.html">arc.scheduler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="job.html">arc.job.job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="job.html">arc.job</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ssh.html">arc.job.ssh</a></li>
 <li class="toctree-l2"><a class="reference internal" href="local.html">arc.job.local</a></li>
 <li class="toctree-l2"><a class="reference internal" href="trsh.html">arc.job.trsh</a></li>
@@ -946,6 +946,28 @@ Returns the comprehensive (default values for missing job types) job types for A
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="arc.common.is_xyz_mol_match">
+<span class="sig-prename descclassname"><span class="pre">arc.common.</span></span><span class="sig-name descname"><span class="pre">is_xyz_mol_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Molecule</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xyz</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/arc/common.html#is_xyz_mol_match"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.common.is_xyz_mol_match" title="Permalink to this definition">¶</a></dt>
+<dd><p>A helper function that matches rmgpy.molecule.molecule.Molecule object to an xyz,
+used in _scissors to match xyz and the cut products.
+This function only checks the molecular formula.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mol</strong> – rmg Molecule object</p></li>
+<li><p><strong>xyz</strong> – coordinates of the cut product</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if the xyz and molecule match, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="arc.common.key_by_val">
 <span class="sig-prename descclassname"><span class="pre">arc.common.</span></span><span class="sig-name descname"><span class="pre">key_by_val</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dictionary</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/arc/common.html#key_by_val"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.common.key_by_val" title="Permalink to this definition">¶</a></dt>
 <dd><p>A helper function for getting a key from a dictionary corresponding to a certain value.
@@ -1090,14 +1112,13 @@ different object instances.</p></li>
 <dl class="py function">
 <dt class="sig sig-object py" id="arc.common.sort_atoms_in_descending_label_order">
 <span class="sig-prename descclassname"><span class="pre">arc.common.</span></span><span class="sig-name descname"><span class="pre">sort_atoms_in_descending_label_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Molecule</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/arc/common.html#sort_atoms_in_descending_label_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#arc.common.sort_atoms_in_descending_label_order" title="Permalink to this definition">¶</a></dt>
-<dd><p>A helper function, helpful in the context of atom mapping.
-This function reassign the .atoms in Molecule with a list of atoms
-with the orders based on the labels of the atoms.
+<dd><p>If all atoms in the molecule object has a label, This function reassign the
+.atoms in Molecule with a list of atoms with the orders based on the labels of the atoms.
 for example, [int(atom.label) for atom in mol.atoms] is [1, 4, 32, 7],
-then the function will re-assign the new atom with the order [1, 4, 7, 32]</p>
+then the function will return the new atom with the order [1, 4, 7, 32]</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>mol</strong> (<em>Molecule</em>) – An RMG Molecule object, with labeled atoms</p>
+<dd class="field-odd"><p><strong>mol</strong> – An rmg Molecule object, with labeld atoms</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1249,7 +1270,7 @@ This function converts one format to the other.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2018-2022, Alon Grinberg Dana
+        &copy; Copyright 2018-2023, Alon Grinberg Dana
 
     </p>
   </div>
